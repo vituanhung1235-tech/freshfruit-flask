@@ -127,7 +127,10 @@ def validate_authenticated_session():
         'SELECT id, email, name, role FROM users WHERE id=?',
         (user_id,),
     ).fetchone()
-    if not user or session.get('email') != user['email']:
+    if not user or (
+        session.get('email') is not None
+        and session['email'] != user['email']
+    ):
         session.clear()
         session['csrf'] = os.urandom(24).hex()
         flash('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.', 'warning')

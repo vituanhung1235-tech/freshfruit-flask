@@ -167,6 +167,33 @@ class ApplicationFlowTests(unittest.TestCase):
         with self.client.session_transaction() as session:
             self.assertNotIn('user_id', session)
 
+    def test_legacy_admin_session_can_add_product_to_cart(self):
+        admin_id = self.create_admin()
+        csrf = 'legacy-session-test-token'
+        with self.client.session_transaction() as session:
+            session.update(
+                user_id=admin_id,
+                name='Test Admin',
+                role='admin',
+                csrf=csrf,
+            )
+
+        response = self.client.post(
+            '/product/12',
+            data={'_csrf': csrf, 'quantity': '1'},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers['Location'], '/cart')
+        with self.client.session_transaction() as session:
+            self.assertEqual(session['email'], 'admin@example.com')
+        with app_module.app.app_context():
+            cart_item = app_module.db().execute(
+                'SELECT quantity FROM cart_items WHERE user_id=? AND product_id=?',
+                (admin_id, 12),
+            ).fetchone()
+        self.assertEqual(cart_item['quantity'], 1)
+
     def test_customer_registration_login_and_order_checkout(self):
         token = self.csrf_token('/register')
         response = self.client.post(
