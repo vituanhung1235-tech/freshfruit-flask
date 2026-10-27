@@ -41,7 +41,24 @@ Lấy API key từ https://platform.openai.com/api-keys. Tài khoản API thư�
 
 **Chatbot không thể đảm bảo trả lời chính xác mọi câu hỏi.** Không có cơ chế lấy dữ liệu web theo thời gian thực trong bản demo này.
 
-## 4. Đẩy code lên GitHub
+## 4. Đặt lại mật khẩu admin qua email
+
+Trong `.env`, cấu hình SMTP và URL gốc của website:
+
+```env
+APP_BASE_URL=https://ten-mien-cua-ban
+SMTP_HOST=smtp.gmail.com
+SMTP_PORT=587
+SMTP_USERNAME=email-gui-cua-ban@gmail.com
+SMTP_PASSWORD=mat-khau-ung-dung-16-ky-tu
+MAIL_FROM=email-gui-cua-ban@gmail.com
+```
+
+Với Gmail, hãy bật xác minh 2 bước và tạo **App Password**; không dùng mật khẩu đăng nhập Gmail thông thường. Giữ các giá trị bí mật trong `.env`, không đưa vào GitHub. Trên máy local có thể dùng `APP_BASE_URL=http://127.0.0.1:5000`. Khởi động lại ứng dụng sau khi cập nhật cấu hình.
+
+Tại trang đăng nhập, chọn **Quên mật khẩu admin?**, nhập email quản trị và mở liên kết được gửi đến hộp thư. Liên kết chỉ dùng một lần, hết hạn sau 30 phút; khách hàng không thể dùng chức năng này để đổi mật khẩu. SMTP cần được cấu hình mới gửi email thật; bộ test kiểm tra luồng gửi bằng SMTP giả lập.
+
+## 5. Đẩy code lên GitHub
 
 ```bash
 git init
@@ -54,16 +71,16 @@ git push -u origin main
 
 Thay `USERNAME` bằng tên tài khoản GitHub. File `.env`, database và thư mục `.venv` đã được loại khỏi Git.
 
-## 5. Triển khai lên mạng Internet (quan trọng)
+## 6. Triển khai lên mạng Internet (quan trọng)
 
 **Không triển khai cấu hình SQLite này trực tiếp lên Vercel để bán hàng thật.** Vercel hỗ trợ Flask/Python, nhưng filesystem của function không phải nơi lưu SQLite bền vững giữa lần chạy và lần deploy. Để mọi tài khoản/đơn hàng được lưu ổn định, phải đổi sang PostgreSQL/MySQL hosting bên ngoài (ví dụ Neon/Supabase/Railway) và cập nhật tầng `db()` cùng SQL tương ứng. Hoặc host cả ứng dụng Flask + SQLite trên VPS có ổ đĩa bền vững và cấu hình sao lưu; phù hợp hơn với demo nhỏ.
 
 Trong môi trường thật: SECRET_KEY mạnh, COOKIE_SECURE=1 khi chạy HTTPS, cấu hình DB có backup, giới hạn tần suất đăng nhập/chatbot, email reset password, xác thực địa chỉ/số điện thoại, payment gateway và xử lý quy trình giao hàng.
 
-## 6. Giới hạn hiện tại
+## 7. Giới hạn hiện tại
 
 - Chỉ hỗ trợ thanh toán khi nhận hàng; chưa có thanh toán online.
-- Chưa có quên mật khẩu qua email / đăng nhập Google.
+- Chưa có đăng nhập Google.
 - Chưa có giới hạn tần suất, chính sách hoàn hàng, bảng giá giao hàng hay lưu lịch sử chatbot vào DB.
 - Hình ảnh hoa quả dùng emoji, có thể đổi sang hình ảnh thật khi triển khai.
 - Chưa tích hợp kiểm duyệt nội dung và bảo vệ chống abuse ở quy mô công khai.

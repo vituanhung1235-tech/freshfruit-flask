@@ -5,6 +5,7 @@ from pathlib import Path
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, g, abort
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
+from password_reset import create_password_reset_blueprint
 
 load_dotenv()
 ROOT = Path(__file__).resolve().parent
@@ -48,6 +49,8 @@ def db():
         g.db.execute('PRAGMA foreign_keys=ON')
     return g.db
 
+app.register_blueprint(create_password_reset_blueprint(db))
+
 @app.teardown_appcontext
 def close_db(exc):
     conn = g.pop('db', None)
@@ -65,6 +68,7 @@ def init_db():
     CREATE TABLE IF NOT EXISTS order_items(id INTEGER PRIMARY KEY, order_id INTEGER NOT NULL REFERENCES orders(id), product_id INTEGER NOT NULL REFERENCES products(id), product_name TEXT NOT NULL, unit_price INTEGER NOT NULL, quantity INTEGER NOT NULL);
     CREATE TABLE IF NOT EXISTS reviews(id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), product_id INTEGER NOT NULL REFERENCES products(id), stars INTEGER NOT NULL CHECK(stars BETWEEN 1 AND 5), content TEXT NOT NULL, created_at TEXT NOT NULL, UNIQUE(user_id, product_id));
     CREATE TABLE IF NOT EXISTS coupons(code TEXT PRIMARY KEY, discount_percent INTEGER NOT NULL, active INTEGER NOT NULL DEFAULT 1);
+    CREATE TABLE IF NOT EXISTS password_reset_tokens(token_hash TEXT PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, expires_at TEXT NOT NULL, created_at TEXT NOT NULL);
     ''')
     cols = [col[1] for col in conn.execute("PRAGMA table_info(products)").fetchall()]
     if 'image' not in cols:
