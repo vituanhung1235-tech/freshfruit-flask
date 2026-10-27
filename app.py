@@ -14,7 +14,17 @@ app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE'] = os.getenv('COOKIE_SECURE', '0') == '1'
-DB_PATH = os.getenv('DATABASE_PATH', str(ROOT / 'freshfruit.db'))
+
+# Trên Vercel chỉ dùng SQLite tạm thời để kiểm thử.
+# Trên máy tính vẫn dùng freshfruit.db như cũ.
+if os.getenv("VERCEL"):
+    DB_PATH = "/tmp/freshfruit.db"
+else:
+    DB_PATH = os.getenv(
+        "DATABASE_PATH",
+        str(ROOT / "freshfruit.db")
+    )
+
 
 PRODUCTS = [
     ('Táo Fuji Nhật Bản', 'Nhập khẩu', 89000, 'kg', 'Táo giòn ngọt, mọng nước, nhập khẩu trực tiếp. Chứa nhiều vitamin và chất chống oxy hóa.', '🍎', '/static/images/apple.jpg', 40),
