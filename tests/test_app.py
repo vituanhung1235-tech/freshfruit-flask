@@ -137,6 +137,86 @@ class ApplicationFlowTests(unittest.TestCase):
         with self.client.session_transaction() as session:
             self.assertEqual(session['role'], 'customer')
 
+    def test_session_follows_email_when_database_instance_has_different_user_ids(self):
+        self.create_admin()
+        csrf = 'cross-instance-admin-session-token'
+        with self.client.session_transaction() as session:
+            session.update(
+                user_id=1,
+                email='admin@example.com',
+                name='Test Admin',
+                role='admin',
+                csrf=csrf,
+            )
+
+        other_database = Path(TEST_DATA.name) / 'other-instance.db'
+        original_database = app_module.DB_PATH
+        try:
+            app_module.DB_PATH = str(other_database)
+            with patch.dict(
+                os.environ,
+                {'ADMIN_EMAIL': '', 'ADMIN_PASSWORD': ''},
+            ):
+                app_module.init_db()
+            with app_module.app.app_context():
+                app_module.db().execute(
+                    'INSERT INTO users(name, email, password_hash) VALUES(?,?,?)',
+                    ('Other customer', 'other@example.com', 'unused'),
+                )
+                app_module.db().commit()
+            with patch.dict(
+                os.environ,
+                {
+                    'ADMIN_EMAIL': 'admin@example.com',
+                    'ADMIN_PASSWORD': 'a-long-test-admin-password',
+                    'ADMIN_NAME': 'Test Admin',
+                },
+            ):
+                app_module.init_db()
+                response = self.client.get('/admin')
+        finally:
+            app_module.DB_PATH = original_database
+
+        self.assertEqual(response.status_code, 200)
+        with self.client.session_transaction() as session:
+            self.assertEqual(session['user_id'], 2)
+            self.assertEqual(session['email'], 'admin@example.com')
+
+    def test_environment_admin_is_seeded_and_login_works(self):
+        with patch.dict(
+            os.environ,
+            {
+                'ADMIN_EMAIL': 'fixed-admin@example.com',
+                'ADMIN_PASSWORD': 'a-long-test-admin-password',
+                'ADMIN_NAME': 'Fixed Test Admin',
+            },
+        ):
+            app_module.init_db()
+            with app_module.app.app_context():
+                admin = app_module.db().execute(
+                    'SELECT id, name, role, password_hash FROM users WHERE email=?',
+                    ('fixed-admin@example.com',),
+                ).fetchone()
+                user_count = app_module.db().execute(
+                    'SELECT COUNT(*) FROM users WHERE email=?',
+                    ('fixed-admin@example.com',),
+                ).fetchone()[0]
+            token = self.csrf_token()
+            response = self.client.post(
+                '/login',
+                data={
+                    '_csrf': token,
+                    'email': 'FIXED-ADMIN@EXAMPLE.COM',
+                    'password': 'a-long-test-admin-password',
+                },
+            )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers['Location'], '/admin')
+        self.assertEqual(admin['name'], 'Fixed Test Admin')
+        self.assertEqual(admin['role'], 'admin')
+        self.assertEqual(user_count, 1)
+
     def test_session_is_invalidated_if_database_reuses_user_id(self):
         self.create_admin()
         csrf = 'reused-user-id-test-token'

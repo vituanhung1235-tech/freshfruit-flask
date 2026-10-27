@@ -10,11 +10,17 @@ from password_reset import create_password_reset_blueprint
 load_dotenv()
 ROOT = Path(__file__).resolve().parent
 app = Flask(__name__)
-app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'local-dev-change-this-secret')
+secret_key = os.getenv('SECRET_KEY')
+if os.getenv('VERCEL') and not secret_key:
+    raise RuntimeError('SECRET_KEY must be configured in the Vercel environment')
+app.config['SECRET_KEY'] = secret_key or 'local-dev-change-this-secret'
 app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
-app.config['SESSION_COOKIE_SECURE'] = os.getenv('COOKIE_SECURE', '0') == '1'
+app.config['SESSION_COOKIE_SECURE'] = os.getenv(
+    'COOKIE_SECURE',
+    '1' if os.getenv('VERCEL') else '0',
+) == '1'
 
 # Trên Vercel chỉ dùng SQLite tạm thời để kiểm thử.
 # Trên máy tính vẫn dùng freshfruit.db như cũ.
@@ -93,8 +99,41 @@ def init_db():
         for name, img in fruit_images.items():
             conn.execute("UPDATE products SET image=? WHERE name=? AND (image IS NULL OR image='')", (img, name))
     conn.execute("INSERT OR IGNORE INTO coupons(code, discount_percent) VALUES('FRESH10', 10)")
+    seed_admin(conn)
     conn.commit()
     conn.close()
+
+def seed_admin(conn):
+    email = os.getenv('ADMIN_EMAIL', '').strip().lower()
+    password = os.getenv('ADMIN_PASSWORD', '')
+    name = os.getenv('ADMIN_NAME', 'FreshFruit Admin').strip()[:100]
+
+    if not email and not password:
+        return
+    if not email or not password:
+        raise RuntimeError('ADMIN_EMAIL and ADMIN_PASSWORD must both be configured')
+    if not re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+', email):
+        raise RuntimeError('ADMIN_EMAIL must be a valid email address')
+    if len(password) < 12:
+        raise RuntimeError('ADMIN_PASSWORD must contain at least 12 characters')
+    if len(name) < 2:
+        raise RuntimeError('ADMIN_NAME must contain at least 2 characters')
+
+    password_hash = generate_password_hash(password)
+    user = conn.execute(
+        'SELECT id FROM users WHERE lower(email)=?',
+        (email,),
+    ).fetchone()
+    if user:
+        conn.execute(
+            'UPDATE users SET email=?, name=?, password_hash=?, role=? WHERE id=?',
+            (email, name, password_hash, 'admin', user[0]),
+        )
+    else:
+        conn.execute(
+            'INSERT INTO users(name, email, password_hash, role) VALUES(?,?,?,?)',
+            (name, email, password_hash, 'admin'),
+        )
 
 @app.context_processor
 def inject():
@@ -123,14 +162,18 @@ def validate_authenticated_session():
     if user_id is None:
         return
 
-    user = db().execute(
-        'SELECT id, email, name, role FROM users WHERE id=?',
-        (user_id,),
-    ).fetchone()
-    if not user or (
-        session.get('email') is not None
-        and session['email'] != user['email']
-    ):
+    email = session.get('email')
+    if email:
+        user = db().execute(
+            'SELECT id, email, name, role FROM users WHERE lower(email)=?',
+            (email.strip().lower(),),
+        ).fetchone()
+    else:
+        user = db().execute(
+            'SELECT id, email, name, role FROM users WHERE id=?',
+            (user_id,),
+        ).fetchone()
+    if not user:
         session.clear()
         session['csrf'] = os.urandom(24).hex()
         flash('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.', 'warning')

@@ -28,6 +28,8 @@ python create_admin.py
 
 Nhập email, tên, mật khẩu tự chọn. Đăng nhập trên `/login`, truy cập `/admin`. Không có mật khẩu Admin mặc định.
 
+Nếu cấu hình `ADMIN_EMAIL`, `ADMIN_PASSWORD` (tối thiểu 12 ký tự) và tùy chọn `ADMIN_NAME` trong `.env`, ứng dụng sẽ tạo/cập nhật tài khoản admin này mỗi lần khởi tạo database. Không commit mật khẩu vào GitHub.
+
 ## 3. Bật chatbot AI trả lời đa lĩnh vực
 
 Trong `.env` thêm:
@@ -74,6 +76,8 @@ Thay `USERNAME` bằng tên tài khoản GitHub. File `.env`, database và thư 
 ## 6. Triển khai lên mạng Internet (quan trọng)
 
 Mã nguồn đã có entrypoint Flask tại `api/index.py` và route rewrite trong `vercel.json`. Tuy nhiên, **không triển khai cấu hình SQLite này lên Vercel để bán hàng thật**: filesystem `/tmp` của function chỉ tạm thời, mỗi function instance có thể dùng database riêng và dữ liệu có thể mất sau khi instance/deploy thay đổi. Để tài khoản, phiên đăng nhập, giỏ hàng và đơn hàng hoạt động ổn định, chuyển sang PostgreSQL/MySQL dùng chung (ví dụ Neon/Supabase/Railway) trước khi deploy; hoặc chạy Flask + SQLite trên VPS có ổ đĩa bền vững và backup.
+
+Để có admin ổn định cho bản demo Vercel khi chưa chuyển database, vào **Vercel → Project → Settings → Environment Variables**, đặt `SECRET_KEY` (chuỗi ngẫu nhiên bí mật dài), `ADMIN_EMAIL`, `ADMIN_PASSWORD` (tối thiểu 12 ký tự) và `ADMIN_NAME`; chọn môi trường Production (và Preview nếu cần), sau đó redeploy. Ứng dụng sẽ bootstrap admin vào SQLite tạm của từng instance; đăng nhập và phiên admin được đối chiếu bằng email thay vì phụ thuộc ID SQLite. Tuy vậy, cách này **không làm dữ liệu SQLite trở nên bền vững**: giỏ hàng, đơn hàng và tài khoản khách vẫn có thể mất/không đồng bộ cho tới khi dùng database chung. Không tạo mật khẩu admin mặc định trong source code.
 
 Trong môi trường thật: SECRET_KEY mạnh, COOKIE_SECURE=1 khi chạy HTTPS, cấu hình DB có backup, giới hạn tần suất đăng nhập/chatbot, email reset password, xác thực địa chỉ/số điện thoại, payment gateway và xử lý quy trình giao hàng.
 
