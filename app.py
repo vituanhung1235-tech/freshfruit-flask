@@ -1,4 +1,4 @@
-import os, sqlite3, json, re
+import os, sqlite3, json, re, secrets
 from datetime import datetime
 from functools import wraps
 from pathlib import Path
@@ -11,9 +11,16 @@ load_dotenv()
 ROOT = Path(__file__).resolve().parent
 app = Flask(__name__)
 secret_key = os.getenv('SECRET_KEY')
-if os.getenv('VERCEL') and not secret_key:
-    raise RuntimeError('SECRET_KEY must be configured in the Vercel environment')
-app.config['SECRET_KEY'] = secret_key or 'local-dev-change-this-secret'
+if not secret_key:
+    if os.getenv('VERCEL'):
+        secret_key = secrets.token_urlsafe(48)
+        app.logger.warning(
+            'SECRET_KEY is not configured; sessions will not persist across function instances. '
+            'Set SECRET_KEY in the Vercel environment.'
+        )
+    else:
+        secret_key = 'local-dev-change-this-secret'
+app.config['SECRET_KEY'] = secret_key
 app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
@@ -111,13 +118,19 @@ def seed_admin(conn):
     if not email and not password:
         return
     if not email or not password:
-        raise RuntimeError('ADMIN_EMAIL and ADMIN_PASSWORD must both be configured')
+        app.logger.warning(
+            'Admin bootstrap skipped: configure both ADMIN_EMAIL and ADMIN_PASSWORD.'
+        )
+        return
     if not re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+', email):
-        raise RuntimeError('ADMIN_EMAIL must be a valid email address')
+        app.logger.error('Admin bootstrap skipped: ADMIN_EMAIL is not a valid email address.')
+        return
     if len(password) < 12:
-        raise RuntimeError('ADMIN_PASSWORD must contain at least 12 characters')
+        app.logger.error('Admin bootstrap skipped: ADMIN_PASSWORD must contain at least 12 characters.')
+        return
     if len(name) < 2:
-        raise RuntimeError('ADMIN_NAME must contain at least 2 characters')
+        app.logger.error('Admin bootstrap skipped: ADMIN_NAME must contain at least 2 characters.')
+        return
 
     password_hash = generate_password_hash(password)
     user = conn.execute(

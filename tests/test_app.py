@@ -6,6 +6,8 @@ import re
 import runpy
 import tempfile
 import unittest
+import subprocess
+import sys
 from contextlib import redirect_stdout
 from pathlib import Path
 from unittest.mock import patch
@@ -216,6 +218,40 @@ class ApplicationFlowTests(unittest.TestCase):
         self.assertEqual(admin['name'], 'Fixed Test Admin')
         self.assertEqual(admin['role'], 'admin')
         self.assertEqual(user_count, 1)
+
+    def test_vercel_import_does_not_crash_without_secret_key(self):
+        environment = os.environ.copy()
+        environment.update(VERCEL='1', AUTO_INIT_DB='0')
+        for key in ('SECRET_KEY', 'ADMIN_EMAIL', 'ADMIN_PASSWORD', 'ADMIN_NAME'):
+            environment.pop(key, None)
+
+        result = subprocess.run(
+            [
+                sys.executable,
+                '-c',
+                'import app; print(bool(app.app.config["SECRET_KEY"]))',
+            ],
+            cwd=PROJECT_ROOT,
+            env=environment,
+            capture_output=True,
+            text=True,
+            check=True,
+        )
+
+        self.assertIn('True', result.stdout)
+
+    def test_missing_admin_environment_skips_bootstrap_without_crashing(self):
+        with patch.dict(
+            os.environ,
+            {'ADMIN_EMAIL': '', 'ADMIN_PASSWORD': ''},
+        ):
+            app_module.init_db()
+
+        with app_module.app.app_context():
+            admin_count = app_module.db().execute(
+                "SELECT COUNT(*) FROM users WHERE role='admin'"
+            ).fetchone()[0]
+        self.assertEqual(admin_count, 0)
 
     def test_session_is_invalidated_if_database_reuses_user_id(self):
         self.create_admin()
