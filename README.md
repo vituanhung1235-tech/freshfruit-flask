@@ -73,7 +73,7 @@ Thay `USERNAME` bằng tên tài khoản GitHub. File `.env`, database và thư 
 
 ## 6. Triển khai lên mạng Internet (quan trọng)
 
-**Không triển khai cấu hình SQLite này trực tiếp lên Vercel để bán hàng thật.** Vercel hỗ trợ Flask/Python, nhưng filesystem của function không phải nơi lưu SQLite bền vững giữa lần chạy và lần deploy. Để mọi tài khoản/đơn hàng được lưu ổn định, phải đổi sang PostgreSQL/MySQL hosting bên ngoài (ví dụ Neon/Supabase/Railway) và cập nhật tầng `db()` cùng SQL tương ứng. Hoặc host cả ứng dụng Flask + SQLite trên VPS có ổ đĩa bền vững và cấu hình sao lưu; phù hợp hơn với demo nhỏ.
+Mã nguồn đã có entrypoint Flask tại `api/index.py` và route rewrite trong `vercel.json`. Tuy nhiên, **không triển khai cấu hình SQLite này lên Vercel để bán hàng thật**: filesystem `/tmp` của function chỉ tạm thời, mỗi function instance có thể dùng database riêng và dữ liệu có thể mất sau khi instance/deploy thay đổi. Để tài khoản, phiên đăng nhập, giỏ hàng và đơn hàng hoạt động ổn định, chuyển sang PostgreSQL/MySQL dùng chung (ví dụ Neon/Supabase/Railway) trước khi deploy; hoặc chạy Flask + SQLite trên VPS có ổ đĩa bền vững và backup.
 
 Trong môi trường thật: SECRET_KEY mạnh, COOKIE_SECURE=1 khi chạy HTTPS, cấu hình DB có backup, giới hạn tần suất đăng nhập/chatbot, email reset password, xác thực địa chỉ/số điện thoại, payment gateway và xử lý quy trình giao hàng.
 

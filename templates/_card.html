@@ -1,1 +1,38 @@
-<div class="product-card"><a href="{{url_for('product',pid=p.id)}}" class="fruit-visual">{% if p.image %}<img src="{{p.image}}" alt="{{p.name}}" class="fruit-img" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block';"><span class="fruit-fallback" style="display:none;">{{p.emoji}}</span>{% else %}<span>{{p.emoji}}</span>{% endif %}</a><div class="card-body"><small>{{p.category}}</small><a class="prod-name" href="{{url_for('product',pid=p.id)}}">{{p.name}}</a><div class="price">{{money(p.price)}} <span>/{{p.unit}}</span></div><div class="stock">{% if p.stock>0 %}✓ Còn {{p.stock}} {{p.unit}}{% else %}Hết hàng{% endif %}</div><a class="add-btn" href="{{url_for('product',pid=p.id)}}">Xem & mua hàng →</a></div></div>
+<div class="product-card">
+  <div class="card-badge-wrap">
+    <span class="badge-fresh">🌿 Tươi mới</span>
+    {% if p.category == 'Nhập khẩu' %}
+      <span class="badge-imported">✈️ Nhập khẩu</span>
+    {% endif %}
+  </div>
+  <a href="{{url_for('product',pid=p.id)}}" class="fruit-visual">
+    {% if p.image %}
+      <img src="{{p.image}}" alt="{{p.name}}" class="fruit-img" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block';">
+      <span class="fruit-fallback" style="display:none;">{{p.emoji}}</span>
+    {% else %}
+      <span>{{p.emoji}}</span>
+    {% endif %}
+  </a>
+  <div class="card-body">
+    <div class="card-meta-top">
+      <small class="card-cat">{{p.category}}</small>
+      <span class="card-rating">⭐⭐⭐⭐⭐</span>
+    </div>
+    <a class="prod-name" href="{{url_for('product',pid=p.id)}}" title="{{p.name}}">{{p.name}}</a>
+    <div class="price-box">
+      <span class="price">{{money(p.price)}}</span>
+      <span class="unit">/ {{p.unit}}</span>
+    </div>
+    <div class="stock-info">
+      {% if p.stock > 0 %}
+        <span class="stock-badge in-stock">✓ Còn {{p.stock}} {{p.unit}}</span>
+      {% else %}
+        <span class="stock-badge out-stock">Tạm hết hàng</span>
+      {% endif %}
+    </div>
+    <a class="add-btn" href="{{url_for('product',pid=p.id)}}">
+      <span>Xem & Mua hàng</span>
+      <span class="btn-arrow">→</span>
+    </a>
+  </div>
+</div>

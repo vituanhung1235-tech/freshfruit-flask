@@ -1,6 +1,225 @@
-<!doctype html><html lang="vi"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="csrf-token" content="{{ csrf_token() }}"><title>{% block title %}FreshFruit{% endblock %} | Hoa quả tươi</title><link rel="stylesheet" href="{{ url_for('static',filename='style.css') }}"></head><body>
-<div class="strip">🚚 Hoa quả tươi mỗi ngày · Mua sắm dễ dàng · Thanh toán COD</div>
-<header><nav class="container nav"><a href="{{url_for('home')}}" class="logo">🍃 Fresh<span>Fruit</span></a><form class="search" action="{{url_for('products')}}"><input name="q" placeholder="Tìm táo, cam, nho, dâu..." value="{{request.args.get('q','') if request.endpoint=='products' else ''}}"><button>🔎</button></form><div class="navlinks"><a href="{{url_for('products')}}">Sản phẩm</a>{% if current_user %}<a href="{{url_for('orders')}}">Đơn hàng</a><a href="{{url_for('profile')}}">👤 {{current_user}}</a>{% if is_admin %}<a href="{{url_for('admin')}}">Quản trị</a>{% endif %}<a href="{{url_for('cart')}}">🛒 Giỏ hàng ({{cart_count}})</a><form method="post" action="{{url_for('logout')}}"><input type="hidden" name="_csrf" value="{{csrf_token()}}"><button class="textbtn">Đăng xuất</button></form>{% else %}<a href="{{url_for('login')}}">Đăng nhập</a><a class="pill" href="{{url_for('register')}}">Đăng ký</a>{% endif %}</div></nav></header>
-<main class="container">{% with messages=get_flashed_messages(with_categories=true) %}{% for category,message in messages %}<div class="alert {{category}}">{{message}}</div>{% endfor %}{% endwith %}{% block content %}{% endblock %}</main>
-<footer><div class="container foot"><div><strong>🍃 FreshFruit</strong><p>Hoa quả tươi, trao trọn yêu thương.</p></div><div>Liên hệ: support@freshfruit.example<br>Đây là dự án học tập – thông tin minh họa.</div></div></footer>
-<button id="chat-toggle" aria-label="Mở chatbot">💬 <span>Hỏi FreshAI</span></button><section id="chatbox" class="chatbox" hidden><div class="chathead">🤖 FreshAI <button id="chat-close" aria-label="Đóng">✕</button></div><div id="chat-messages" class="chatmsgs"><div class="bubble bot">Xin chào! Mình có thể tư vấn hoa quả, hướng dẫn đặt hàng và trả lời câu hỏi khác khi đã bật AI.</div></div><form id="chat-form" class="chatinput"><input id="chat-text" maxlength="1000" placeholder="Hỏi FreshAI điều bạn muốn..." required><button>Gửi</button></form></section><script src="{{url_for('static',filename='app.js')}}"></script></body></html>
+<!doctype html>
+<html lang="vi">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="csrf-token" content="{{ csrf_token() }}">
+  <title>{% block title %}Trang chủ{% endblock %} | Tuấn Hùng Fruit - Hoa Quả Nhập Khẩu & Tươi Sạch</title>
+  <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;0,800;1,700&display=swap" rel="stylesheet">
+</head>
+<body>
+
+  <!-- Top bar -->
+  <div class="top-bar">
+    <div class="container top-bar-content">
+      <div class="top-socials">
+        <a href="https://facebook.com" target="_blank" title="Facebook" aria-label="Facebook">f</a>
+        <a href="https://instagram.com" target="_blank" title="Instagram" aria-label="Instagram">📸</a>
+        <a href="https://tiktok.com" target="_blank" title="TikTok" aria-label="TikTok">🎵</a>
+        <a href="https://youtube.com" target="_blank" title="YouTube" aria-label="YouTube">▶</a>
+      </div>
+
+      <form class="top-search" action="{{url_for('products')}}" method="get">
+        <div class="search-category-pill">
+          <span>Tất cả</span>
+        </div>
+        <input name="q" placeholder="Tìm kiếm sản phẩm táo, cam, nho, dâu..." value="{{request.args.get('q','') if request.endpoint=='products' else ''}}">
+        <button type="submit" aria-label="Tìm kiếm">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </button>
+      </form>
+
+      <div class="top-contacts">
+        <span class="top-time">⏰ 06:30 - 22:00</span>
+        <span class="top-divider">|</span>
+        <a href="tel:0862552155" class="top-hotline">📞 HOTLINE: <strong>0862 552 155</strong></a>
+      </div>
+    </div>
+  </div>
+
+  <!-- Main Navigation Header -->
+  <header class="main-header">
+    <div class="container header-inner">
+      <a href="{{url_for('home')}}" class="brand-logo">
+        <div class="logo-icon">🍎</div>
+        <div class="logo-text-wrap">
+          <div class="logo-brand">Tuấn Hùng <span>Fruit</span></div>
+          <small class="logo-slogan">good fruit, good life</small>
+        </div>
+      </a>
+
+      <nav class="nav-menu">
+        <a href="{{url_for('home')}}" class="{{'active' if request.endpoint=='home' else ''}}">TRANG CHỦ</a>
+        <a href="{{url_for('products')}}" class="{{'active' if request.endpoint=='products' and not request.args.get('category') else ''}}">SẢN PHẨM</a>
+        <a href="{{url_for('products', category='Nhập khẩu')}}">HOA QUẢ NHẬP KHẨU</a>
+        <a href="{{url_for('products', category='Việt Nam')}}">TRÁI CÂY VIỆT NAM</a>
+        <a href="{{url_for('products', category='Giỏ quà')}}">GIỎ QUÀ TẶNG</a>
+        <a href="#khuyen-mai">KHUYẾN MÃI</a>
+        <a href="#gioi-thieu">GIỚI THIỆU</a>
+      </nav>
+
+      <div class="header-user-actions">
+        {% if current_user %}
+          <div class="user-dropdown-wrap">
+            <a href="{{url_for('profile')}}" class="user-greeting">👤 {{current_user}}</a>
+            <div class="user-menu-pop">
+              <a href="{{url_for('orders')}}">📦 Đơn hàng của tôi</a>
+              <a href="{{url_for('profile')}}">⚙️ Hồ sơ cá nhân</a>
+              {% if is_admin %}
+                <a href="{{url_for('admin')}}" class="admin-link">👑 Quản trị hệ thống</a>
+              {% endif %}
+              <form method="post" action="{{url_for('logout')}}" class="logout-form">
+                <input type="hidden" name="_csrf" value="{{csrf_token()}}">
+                <button type="submit" class="logout-btn">Đăng xuất</button>
+              </form>
+            </div>
+          </div>
+        {% else %}
+          <a href="{{url_for('login')}}" class="nav-auth-link">Đăng nhập</a>
+          <a href="{{url_for('register')}}" class="nav-auth-btn">Đăng ký</a>
+        {% endif %}
+
+        <a href="{{url_for('cart')}}" class="header-cart-btn" title="Giỏ hàng">
+          <span class="cart-icon">🛒</span>
+          <span class="cart-badge">{{cart_count}}</span>
+        </a>
+      </div>
+    </div>
+  </header>
+
+  <!-- Flash messages -->
+  <div class="container message-container">
+    {% with messages=get_flashed_messages(with_categories=true) %}
+      {% for category,message in messages %}
+        <div class="alert {{category}}">{{message}}</div>
+      {% endfor %}
+    {% endwith %}
+  </div>
+
+  <!-- Main Content -->
+  <main class="page-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <!-- Footer -->
+  <footer class="main-footer" id="gioi-thieu">
+    <div class="container footer-grid">
+      <div class="footer-col brand-col">
+        <div class="brand-logo footer-logo">
+          <div class="logo-icon">🍎</div>
+          <div class="logo-text-wrap">
+            <div class="logo-brand">Tuấn Hùng <span>Fruit</span></div>
+            <small class="logo-slogan">good fruit, good life</small>
+          </div>
+        </div>
+        <p class="footer-desc">
+          <strong>Tuấn Hùng Fruit</strong> tự hào là hệ thống chuỗi cửa hàng hoa quả nhập khẩu và trái cây đặc sản vùng miền uy tín số 1 Việt Nam. Cam kết 100% trái cây tươi sạch, kiểm định nghiêm ngặt theo chuẩn VietGAP & GlobalGAP.
+        </p>
+        <div class="footer-contact-list">
+          <div>📍 Trụ sở chính: Số 88 Đại Lộ Xanh, Hà Nội</div>
+          <div>📞 Hotline đặt hàng: <strong>0862 552 155</strong></div>
+          <div>✉️ Email: contact@tuanhungfruit.vn</div>
+          <div>🕒 Giờ mở cửa: 06:30 - 22:00 tất cả các ngày</div>
+        </div>
+      </div>
+
+      <div class="footer-col">
+        <h3>DANH MỤC SẢN PHẨM</h3>
+        <ul class="footer-links">
+          <li><a href="{{url_for('products', category='Nhập khẩu')}}">Trái cây nhập khẩu cao cấp</a></li>
+          <li><a href="{{url_for('products', category='Việt Nam')}}">Hoa quả đặc sản Việt Nam</a></li>
+          <li><a href="{{url_for('products', category='Theo mùa')}}">Trái cây tươi theo mùa</a></li>
+          <li><a href="{{url_for('products', category='Giỏ quà')}}">Giỏ quà biếu lễ & sự kiện</a></li>
+          <li><a href="{{url_for('products')}}">Tất cả sản phẩm</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h3>CHÍNH SÁCH BÁN HÀNG</h3>
+        <ul class="footer-links">
+          <li><a href="#khuyen-mai">Chính sách giao hàng hỏa tốc 2h</a></li>
+          <li><a href="#khuyen-mai">Đổi trả miễn phí trong 24h</a></li>
+          <li><a href="#khuyen-mai">Chính sách bảo mật thông tin</a></li>
+          <li><a href="#khuyen-mai">Phương thức thanh toán COD</a></li>
+          <li><a href="#khuyen-mai">Hướng dẫn mua sắm & mã giảm giá</a></li>
+        </ul>
+      </div>
+
+      <div class="footer-col">
+        <h3>CHỨNG NHẬN & CAM KẾT</h3>
+        <p class="footer-subtext">Tuấn Hùng Fruit cam kết bồi thường 200% nếu phát hiện trái cây tẩm ướp hóa chất độc hại.</p>
+        <div class="trust-badges">
+          <span class="trust-badge">🌿 100% Organic</span>
+          <span class="trust-badge">🛡️ GlobalGAP</span>
+          <span class="trust-badge">⚡ Giao 2 Giờ</span>
+        </div>
+        <div class="promo-box-mini" id="khuyen-mai">
+          <small>MÃ ƯU ĐÃI HIỆN CÓ:</small>
+          <strong>FRESH10 (Giảm 10%)</strong>
+          <span>Áp dụng khi thanh toán</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-bottom">
+      <div class="container footer-bottom-inner">
+        <div>© 2026 Tuấn Hùng Fruit. All Rights Reserved. Trao gửi chất lượng thật - Kiến tạo niềm tin bền vững.</div>
+        <div class="footer-social-bottom">
+          <a href="#">Facebook</a> · <a href="#">Zalo</a> · <a href="#">TikTok</a>
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <!-- Floating Call & Zalo widgets on Bottom Left (As in reference image) -->
+  <div class="floating-contact-left">
+    <a href="tel:0862552155" class="float-btn float-phone" title="Gọi Hotline 0862 552 155" aria-label="Gọi ngay">
+      <span class="pulse-ring"></span>
+      <span class="float-icon">📞</span>
+    </a>
+    <a href="https://zalo.me/0862552155" target="_blank" class="float-btn float-zalo" title="Chat Zalo" aria-label="Zalo">
+      <span class="float-zalo-text">Zalo</span>
+    </a>
+  </div>
+
+  <!-- Floating Chatbot on Bottom Right -->
+  <button id="chat-toggle" aria-label="Mở trợ lý ảo Tuấn Hùng AI">
+    💬 <span>Hỏi Tuấn Hùng AI</span>
+  </button>
+
+  <section id="chatbox" class="chatbox" hidden>
+    <div class="chathead">
+      <div class="chathead-title">
+        <span class="bot-avatar">🤖</span>
+        <div>
+          <strong>Tuấn Hùng AI</strong>
+          <small>Trợ lý hoa quả thông minh</small>
+        </div>
+      </div>
+      <button id="chat-close" aria-label="Đóng chatbot">✕</button>
+    </div>
+
+    <div class="chat-quick-suggestions">
+      <button type="button" class="quick-chip" onclick="sendQuickQuery('giá dưa hấu bao nhiêu')">🍉 Giá dưa hấu</button>
+      <button type="button" class="quick-chip" onclick="sendQuickQuery('có mã giảm giá nào không')">🎁 Mã giảm giá</button>
+      <button type="button" class="quick-chip" onclick="sendQuickQuery('tư vấn hoa quả nhiều vitamin C')">🍊 Tăng đề kháng</button>
+    </div>
+
+    <div id="chat-messages" class="chatmsgs">
+      <div class="bubble bot">
+        Xin chào! Mình là <strong>Tuấn Hùng AI</strong> 🍃. Bạn đang tìm mua loại hoa quả nào, cần báo giá hay tư vấn giỏ quà tặng ạ?
+      </div>
+    </div>
+
+    <form id="chat-form" class="chatinput">
+      <input id="chat-text" maxlength="1000" placeholder="Hỏi Tuấn Hùng AI bất kỳ điều gì..." required autocomplete="off">
+      <button type="submit" aria-label="Gửi tin nhắn">Gửi</button>
+    </form>
+  </section>
+
+  <script src="{{url_for('static', filename='app.js')}}"></script>
+</body>
+</html>

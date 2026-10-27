@@ -1,2 +1,297 @@
-{% extends 'base.html' %}{% block content %}<section class="hero"><div><div class="eyebrow">✦ NÔNG SẢN TƯƠI SẠCH CHẤT LƯỢNG</div><h1>Trái cây tươi ngon<br><em>cho mỗi ngày xanh</em></h1><p>Từ vườn cây đến bàn ăn – khám phá những loại hoa quả tươi ngon, đạt chuẩn an toàn cho gia đình bạn.</p><a href="{{url_for('products')}}" class="cta">Khám phá sản phẩm →</a></div><div class="hero-image-wrap"><img src="{{url_for('static',filename='images/hero_fruits.jpg')}}" alt="Hoa quả tươi ngon" class="hero-banner-img"><div class="hero-tag">🌿 100% Tươi sạch tự nhiên</div></div></section>
-<section class="benefits"><div>🚛 <strong>Đặt hàng nhanh</strong><small>Mua sắm ngay tại nhà</small></div><div>🌿 <strong>Tươi ngon</strong><small>Sản phẩm được chọn lọc</small></div><div>🔒 <strong>An toàn</strong><small>Bảo vệ thông tin khách hàng</small></div><div>🎁 <strong>Giỏ quà đẹp</strong><small>Quà tặng đầy ý nghĩa</small></div></section><div class="section-head"><div><span class="eyebrow">DÀNH CHO BẠN</span><h2>Trái cây nổi bật</h2></div><a href="{{url_for('products')}}">Xem tất cả →</a></div><div class="products-grid">{% for p in products %}{% include '_card.html' %}{% endfor %}</div><section class="promo"><div><span>ƯU ĐÃI DEMO</span><h2>Giảm 10% đơn hàng</h2><p>Nhập mã <strong>FRESH10</strong> khi thanh toán.</p></div><div>🎁</div></section>{% endblock %}
+{% extends 'base.html' %}
+{% block title %}Trang chủ{% endblock %}
+{% block content %}
+
+<!-- Hero Banner Slider with "Tuấn Hùng Fruit" -->
+<section class="slider-container" id="tuanhung-slider">
+  <div class="slider-wrapper">
+
+    <!-- SLIDE 1 -->
+    <div class="slide-item active" data-slide="0">
+      <div class="banner-card banner-green-theme">
+        <div class="banner-decor-leaf leaf-tl">🌿</div>
+        <div class="banner-decor-leaf leaf-tr">🍃</div>
+        <div class="banner-decor-leaf leaf-bl">🍃</div>
+        <div class="banner-decor-leaf leaf-br">🌿</div>
+
+        <div class="banner-inner">
+          <!-- Left Visual Frame (Gift Basket) -->
+          <div class="banner-side-visual left-visual">
+            <div class="visual-frame angle-frame">
+              <img src="{{url_for('static', filename='images/giftbasket.jpg')}}" alt="Giỏ quà trái cây Tuấn Hùng Fruit" class="visual-img">
+              <span class="visual-caption">Giỏ quà cao cấp</span>
+            </div>
+          </div>
+
+          <!-- Center Content -->
+          <div class="banner-center-content">
+            <div class="brand-crest">
+              <span class="crest-icon">🍎</span>
+              <span class="crest-text">Tuấn Hùng Fruit</span>
+              <span class="crest-slogan">good fruit, good life</span>
+            </div>
+
+            <h1 class="banner-title-3d">Tuấn Hùng Fruit</h1>
+
+            <div class="banner-slogan-box">
+              <p class="banner-slogan-main">TRAO GỬI CHẤT LƯỢNG THẬT</p>
+              <p class="banner-slogan-sub">KIẾN TẠO NIỀM TIN BỀN VỮNG</p>
+            </div>
+
+            <div class="banner-cta-row">
+              <a href="{{url_for('products')}}" class="banner-cta-btn">Khám Phá Cửa Hàng →</a>
+              <span class="banner-promo-badge">⚡ Giao nhanh trong 2 giờ</span>
+            </div>
+
+            <div class="banner-bottom-info">
+              <span>🌐 tuanhungfruit.vn</span>
+              <span class="dot-sep">•</span>
+              <span>📞 0862.552.155</span>
+            </div>
+          </div>
+
+          <!-- Right Visual Frame (Store Chilled Displays) -->
+          <div class="banner-side-visual right-visual">
+            <div class="visual-frame angle-frame frame-shelf">
+              <img src="{{url_for('static', filename='images/fruit_shelf.jpg')}}" alt="Kệ nho hoa quả tươi Tuấn Hùng Fruit" class="visual-img">
+              <span class="visual-caption">100% Tươi sạch</span>
+            </div>
+            <div class="visual-frame angle-frame frame-store">
+              <img src="{{url_for('static', filename='images/store_display.jpg')}}" alt="Cửa hàng Tuấn Hùng Fruit" class="visual-img">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 2 -->
+    <div class="slide-item" data-slide="1">
+      <div class="banner-card banner-emerald-theme">
+        <div class="banner-decor-leaf leaf-tl">🌿</div>
+        <div class="banner-decor-leaf leaf-tr">🍃</div>
+        <div class="banner-decor-leaf leaf-bl">🍃</div>
+        <div class="banner-decor-leaf leaf-br">🌿</div>
+
+        <div class="banner-inner">
+          <div class="banner-side-visual left-visual">
+            <div class="visual-frame angle-frame">
+              <img src="{{url_for('static', filename='images/grapes.jpg')}}" alt="Nho xanh không hạt Tuấn Hùng Fruit" class="visual-img">
+              <span class="visual-caption">Nho xanh giòn ngọt</span>
+            </div>
+          </div>
+
+          <div class="banner-center-content">
+            <div class="brand-crest">
+              <span class="crest-icon">🍎</span>
+              <span class="crest-text">Tuấn Hùng Fruit</span>
+              <span class="crest-slogan">good fruit, good life</span>
+            </div>
+
+            <h2 class="banner-title-3d">Tuấn Hùng Fruit</h2>
+
+            <div class="banner-slogan-box">
+              <p class="banner-slogan-main">TRÁI CÂY NHẬP KHẨU CAO CẤP</p>
+              <p class="banner-slogan-sub">TƯƠI MỚI MỖI NGÀY - CHUẨN GLOBALGAP</p>
+            </div>
+
+            <div class="banner-cta-row">
+              <a href="{{url_for('products', category='Nhập khẩu')}}" class="banner-cta-btn">Mua Trái Cây Nhập Khẩu →</a>
+              <span class="banner-promo-badge">🌟 Giảm 10% mã FRESH10</span>
+            </div>
+
+            <div class="banner-bottom-info">
+              <span>🌐 tuanhungfruit.vn</span>
+              <span class="dot-sep">•</span>
+              <span>📞 0862.552.155</span>
+            </div>
+          </div>
+
+          <div class="banner-side-visual right-visual">
+            <div class="visual-frame angle-frame frame-shelf">
+              <img src="{{url_for('static', filename='images/apple.jpg')}}" alt="Táo Fuji Nhật Bản" class="visual-img">
+              <span class="visual-caption">Táo Fuji mọng nước</span>
+            </div>
+            <div class="visual-frame angle-frame frame-store">
+              <img src="{{url_for('static', filename='images/orange.jpg')}}" alt="Cam vàng Úc giàu Vitamin C" class="visual-img">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- SLIDE 3 -->
+    <div class="slide-item" data-slide="2">
+      <div class="banner-card banner-gold-theme">
+        <div class="banner-decor-leaf leaf-tl">🌿</div>
+        <div class="banner-decor-leaf leaf-tr">🍃</div>
+        <div class="banner-decor-leaf leaf-bl">🍃</div>
+        <div class="banner-decor-leaf leaf-br">🌿</div>
+
+        <div class="banner-inner">
+          <div class="banner-side-visual left-visual">
+            <div class="visual-frame angle-frame">
+              <img src="{{url_for('static', filename='images/strawberry.jpg')}}" alt="Dâu tây Đà Lạt" class="visual-img">
+              <span class="visual-caption">Dâu tây đỏ mọng</span>
+            </div>
+          </div>
+
+          <div class="banner-center-content">
+            <div class="brand-crest">
+              <span class="crest-icon">🍎</span>
+              <span class="crest-text">Tuấn Hùng Fruit</span>
+              <span class="crest-slogan">good fruit, good life</span>
+            </div>
+
+            <h2 class="banner-title-3d">Tuấn Hùng Fruit</h2>
+
+            <div class="banner-slogan-box">
+              <p class="banner-slogan-main">GIỎ QUÀ BIẾU TẾT & SỰ KIỆN</p>
+              <p class="banner-slogan-sub">SANG TRỌNG · ĐẲNG CẤP · THEO YÊU CẦU</p>
+            </div>
+
+            <div class="banner-cta-row">
+              <a href="{{url_for('products', category='Giỏ quà')}}" class="banner-cta-btn">Đặt Giỏ Quà Tặng →</a>
+              <span class="banner-promo-badge">🎁 Miễn phí thiệp & ruy băng</span>
+            </div>
+
+            <div class="banner-bottom-info">
+              <span>🌐 tuanhungfruit.vn</span>
+              <span class="dot-sep">•</span>
+              <span>📞 0862.552.155</span>
+            </div>
+          </div>
+
+          <div class="banner-side-visual right-visual">
+            <div class="visual-frame angle-frame frame-shelf">
+              <img src="{{url_for('static', filename='images/giftbasket.jpg')}}" alt="Giỏ quà sự kiện" class="visual-img">
+              <span class="visual-caption">Thiết kế độc quyền</span>
+            </div>
+            <div class="visual-frame angle-frame frame-store">
+              <img src="{{url_for('static', filename='images/hero_fruits.jpg')}}" alt="Trái cây tươi mát" class="visual-img">
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- Slider Controls -->
+  <button class="slider-btn prev-btn" id="slider-prev" aria-label="Slide trước">‹</button>
+  <button class="slider-btn next-btn" id="slider-next" aria-label="Slide tiếp">›</button>
+
+  <!-- Slider Indicators (Dots) -->
+  <div class="slider-dots" id="slider-dots">
+    <button class="dot active" data-go="0" aria-label="Banner 1"></button>
+    <button class="dot" data-go="1" aria-label="Banner 2"></button>
+    <button class="dot" data-go="2" aria-label="Banner 3"></button>
+  </div>
+</section>
+
+<!-- Benefit strip matching reference site -->
+<section class="container benefits-container">
+  <div class="benefit-card">
+    <div class="benefit-icon-circle">🚚</div>
+    <div class="benefit-text">
+      <strong>GIAO HÀNG HỎA TỐC</strong>
+      <small>Nội thành siêu tốc chỉ trong 2H</small>
+    </div>
+  </div>
+  <div class="benefit-card">
+    <div class="benefit-icon-circle">🌿</div>
+    <div class="benefit-text">
+      <strong>SẢN PHẨM TƯƠI SẠCH</strong>
+      <small>100% chọn lọc từ nông trại uy tín</small>
+    </div>
+  </div>
+  <div class="benefit-card">
+    <div class="benefit-icon-circle">🎁</div>
+    <div class="benefit-text">
+      <strong>KHUYẾN MÃI NGẬP TRÀN</strong>
+      <small>Nhập mã FRESH10 giảm ngay 10%</small>
+    </div>
+  </div>
+  <div class="benefit-card">
+    <div class="benefit-icon-circle">🛡️</div>
+    <div class="benefit-text">
+      <strong>HỖ TRỢ & ĐỔI TRẢ</strong>
+      <small>Đổi trả 24h nếu dập nát, hỏng hóc</small>
+    </div>
+  </div>
+</section>
+
+<!-- Category Tabs -->
+<div class="container section-head">
+  <div>
+    <span class="eyebrow">DÀNH CHO BẠN</span>
+    <h2>Trái cây nổi bật tại Tuấn Hùng Fruit</h2>
+    <p class="section-sub">Hoa quả tươi mới về trong ngày, độ ngọt thanh mát, giàu vitamin tự nhiên</p>
+  </div>
+  <div class="head-actions">
+    <a href="{{url_for('products')}}" class="view-all-link">Xem tất cả sản phẩm →</a>
+  </div>
+</div>
+
+<div class="container filter-chips-wrap">
+  <a class="chip active" href="{{url_for('products')}}">✨ Tất cả</a>
+  <a class="chip" href="{{url_for('products', category='Nhập khẩu')}}">✈️ Nhập khẩu</a>
+  <a class="chip" href="{{url_for('products', category='Việt Nam')}}">🇻🇳 Việt Nam</a>
+  <a class="chip" href="{{url_for('products', category='Theo mùa')}}">🍉 Theo mùa</a>
+  <a class="chip" href="{{url_for('products', category='Giỏ quà')}}">🎁 Giỏ quà tặng</a>
+</div>
+
+<!-- Products Grid -->
+<div class="container products-grid">
+  {% for p in products %}
+    {% include '_card.html' %}
+  {% endfor %}
+</div>
+
+<!-- Promo Banner Section -->
+<section class="container promo-banner-wrap" id="khuyen-mai">
+  <div class="promo-banner-inner">
+    <div class="promo-content">
+      <span class="promo-tag">ƯU ĐÃI ĐỘC QUYỀN</span>
+      <h2>Giảm 10% Cho Đơn Hàng Đầu Tiên</h2>
+      <p>Nhập ngay mã ưu đãi <strong>FRESH10</strong> tại bước thanh toán để nhận chiết khấu 10% từ <strong>Tuấn Hùng Fruit</strong>.</p>
+      <div class="promo-actions">
+        <a href="{{url_for('products')}}" class="promo-btn">Mua sắm ngay</a>
+        <span class="promo-code-badge">Mã: <strong>FRESH10</strong></span>
+      </div>
+    </div>
+    <div class="promo-image-box">
+      <img src="{{url_for('static', filename='images/giftbasket.jpg')}}" alt="Khuyến mãi Tuấn Hùng Fruit" class="promo-img">
+    </div>
+  </div>
+</section>
+
+<!-- Why Choose Tuấn Hùng Fruit -->
+<section class="container story-section" id="gioi-thieu">
+  <div class="story-grid">
+    <div class="story-image">
+      <img src="{{url_for('static', filename='images/store_display.jpg')}}" alt="Cửa hàng Tuấn Hùng Fruit" class="story-img">
+      <div class="story-badge">
+        <strong>10+</strong>
+        <span>Năm uy tín</span>
+      </div>
+    </div>
+    <div class="story-text">
+      <span class="eyebrow">VỀ TUẤN HÙNG FRUIT</span>
+      <h2>Trao gửi chất lượng thật - Kiến tạo niềm tin bền vững</h2>
+      <p>
+        Tại <strong>Tuấn Hùng Fruit</strong>, mỗi quả táo, chùm nho hay lát dưa hấu trao đến tay khách hàng đều trải qua quy trình tuyển lựa khắt khe. Chúng tôi hiểu rằng trái cây không chỉ là món ăn tráng miệng, mà còn là nguồn dinh dưỡng quý giá nuôi dưỡng sức khỏe cho cả gia đình bạn.
+      </p>
+      <ul class="story-checklist">
+        <li>✓ Nguồn gốc minh bạch, đầy đủ chứng nhận kiểm định an toàn thực phẩm.</li>
+        <li>✓ Kho lạnh bảo quản tiêu chuẩn quốc tế giúp trái cây giữ nguyên độ giòn ngọt, mọng nước.</li>
+        <li>✓ Đội ngũ tư vấn tận tâm 24/7 với trợ lý ảo <strong>Tuấn Hùng AI</strong> luôn sẵn sàng giải đáp.</li>
+        <li>✓ Giao hàng hỏa tốc trong 2 giờ, đồng kiểm hàng trước khi thanh toán COD.</li>
+      </ul>
+      <div class="story-cta">
+        <a href="{{url_for('products')}}" class="banner-cta-btn">Trải nghiệm mua sắm ngay</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+{% endblock %}

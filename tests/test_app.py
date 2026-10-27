@@ -49,10 +49,123 @@ class ApplicationFlowTests(unittest.TestCase):
 
     def test_public_pages_and_csrf_protection(self):
         self.assertEqual(self.client.get('/health').json, {'status': 'ok'})
-        self.assertEqual(self.client.get('/').status_code, 200)
+        home = self.client.get('/')
+        self.assertEqual(home.status_code, 200)
+        self.assertIn(b'id="tuanhung-slider"', home.data)
+        self.assertIn(b'id="slider-next"', home.data)
+        self.assertIn(b'id="chat-form"', home.data)
+        javascript = self.client.get('/static/app.js')
+        stylesheet = self.client.get('/static/style.css')
+        self.assertEqual(javascript.status_code, 200)
+        self.assertEqual(stylesheet.status_code, 200)
+        javascript.close()
+        stylesheet.close()
         self.assertEqual(self.client.get('/products').status_code, 200)
         self.assertEqual(self.client.get('/cart').status_code, 302)
         self.assertEqual(self.client.post('/login').status_code, 400)
+        for image in ('fruit_shelf.jpg', 'store_display.jpg'):
+            response = self.client.get(f'/static/images/{image}')
+            self.assertEqual(response.status_code, 200)
+            response.close()
+
+    def test_chat_widget_endpoint_and_empty_input_validation(self):
+        token = self.csrf_token('/')
+        with patch.dict(os.environ, {'OPENAI_API_KEY': ''}):
+            response = self.client.post(
+                '/api/chat',
+                json={'message': 'giá dưa hấu bao nhiêu', 'history': []},
+                headers={'X-CSRF-Token': token},
+            )
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json['mode'], 'smart_bot')
+        self.assertIn('Dưa hấu ruột đỏ', response.json['reply'])
+
+        token = self.csrf_token('/')
+        with patch.dict(os.environ, {'OPENAI_API_KEY': ''}):
+            response = self.client.post(
+                '/api/chat',
+                json={'message': '   '},
+                headers={'X-CSRF-Token': token},
+            )
+        self.assertEqual(response.status_code, 400)
+
+    def test_stale_session_cannot_add_product_to_cart(self):
+        self.client.get('/product/12')
+        with self.client.session_transaction() as session:
+            session.update(
+                user_id=9999,
+                name='Expired User',
+                role='customer',
+                csrf='stale-session-test-token',
+            )
+
+        response = self.client.post(
+            '/product/12',
+            data={'_csrf': 'stale-session-test-token', 'quantity': '1'},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers['Location'], '/login')
+        with self.client.session_transaction() as session:
+            self.assertNotIn('user_id', session)
+            self.assertTrue(session.get('_flashes'))
+        with app_module.app.app_context():
+            cart_items = app_module.db().execute(
+                'SELECT COUNT(*) FROM cart_items'
+            ).fetchone()[0]
+        self.assertEqual(cart_items, 0)
+
+    def test_session_role_is_refreshed_from_database(self):
+        admin_id = self.create_admin()
+        with self.client.session_transaction() as session:
+            session.update(
+                user_id=admin_id,
+                email='admin@example.com',
+                name='Test Admin',
+                role='admin',
+            )
+        with app_module.app.app_context():
+            app_module.db().execute(
+                'UPDATE users SET role=? WHERE id=?',
+                ('customer', admin_id),
+            )
+            app_module.db().commit()
+
+        response = self.client.get('/admin')
+
+        self.assertEqual(response.status_code, 403)
+        with self.client.session_transaction() as session:
+            self.assertEqual(session['role'], 'customer')
+
+    def test_session_is_invalidated_if_database_reuses_user_id(self):
+        self.create_admin()
+        csrf = 'reused-user-id-test-token'
+        with self.client.session_transaction() as session:
+            session.update(
+                user_id=1,
+                email='admin@example.com',
+                name='Test Admin',
+                role='admin',
+                csrf=csrf,
+            )
+        with app_module.app.app_context():
+            app_module.db().execute('DELETE FROM users WHERE id=1')
+            app_module.db().execute(
+                'INSERT INTO users(id, name, email, password_hash, role) '
+                'VALUES(1,?,?,?,?)',
+                ('Different User', 'other@example.com', 'unused', 'customer'),
+            )
+            app_module.db().commit()
+
+        response = self.client.post(
+            '/product/12',
+            data={'_csrf': csrf, 'quantity': '1'},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers['Location'], '/login')
+        with self.client.session_transaction() as session:
+            self.assertNotIn('user_id', session)
 
     def test_customer_registration_login_and_order_checkout(self):
         token = self.csrf_token('/register')

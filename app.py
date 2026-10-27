@@ -117,6 +117,29 @@ def csrf_guard():
         if not token or token != session.get('csrf'):
             abort(400, 'CSRF token không hợp lệ')
 
+@app.before_request
+def validate_authenticated_session():
+    user_id = session.get('user_id')
+    if user_id is None:
+        return
+
+    user = db().execute(
+        'SELECT id, email, name, role FROM users WHERE id=?',
+        (user_id,),
+    ).fetchone()
+    if not user or session.get('email') != user['email']:
+        session.clear()
+        session['csrf'] = os.urandom(24).hex()
+        flash('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.', 'warning')
+        return
+
+    session.update(
+        user_id=user['id'],
+        email=user['email'],
+        name=user['name'],
+        role=user['role'],
+    )
+
 @app.context_processor
 def csrf_context():
     return {'csrf_token': lambda: session.get('csrf', '')}
@@ -217,7 +240,7 @@ def register():
                 cursor = db().execute('INSERT INTO users(name, email, password_hash) VALUES(?,?,?)', (name, email, generate_password_hash(password)))
                 db().commit()
                 session.clear()
-                session.update(user_id=cursor.lastrowid, name=name, role='customer', csrf=os.urandom(24).hex())
+                session.update(user_id=cursor.lastrowid, email=email, name=name, role='customer', csrf=os.urandom(24).hex())
                 flash('Đăng ký thành công!', 'success')
                 return redirect(url_for('home'))
             except sqlite3.IntegrityError:
@@ -232,7 +255,7 @@ def login():
         user = db().execute('SELECT * FROM users WHERE email=?', (email,)).fetchone()
         if user and check_password_hash(user['password_hash'], password):
             session.clear()
-            session.update(user_id=user['id'], name=user['name'], role=user['role'], csrf=os.urandom(24).hex())
+            session.update(user_id=user['id'], email=user['email'], name=user['name'], role=user['role'], csrf=os.urandom(24).hex())
             return redirect(url_for('admin') if user['role'] == 'admin' else url_for('home'))
         flash('Email hoặc mật khẩu không chính xác.', 'danger')
     return render_template('auth.html', mode='login')
@@ -413,7 +436,7 @@ def get_smart_bot_reply(question: str, catalog: list) -> str:
     # 1. Greetings
     if any(w in lower for w in ['chào', 'hello', 'hi ', 'hey', 'alo', 'shop ơi', 'ad ơi', 'bot ơi', 'xin chào']):
         return (
-            "Xin chào bạn! Mình là FreshAI - trợ lý hoa quả của FreshFruit 🍃.\n\n"
+            "Xin chào bạn! Mình là Tuấn Hùng AI - trợ lý hoa quả của Tuấn Hùng Fruit 🍃.\n\n"
             "Mình có thể hỗ trợ bạn:\n"
             "• Tra cứu giá cả và độ tươi ngon các loại trái cây\n"
             "• Tư vấn hoa quả tăng đề kháng, bồi bổ sức khỏe, ăn kiêng\n"
@@ -424,7 +447,7 @@ def get_smart_bot_reply(question: str, catalog: list) -> str:
     # 2. Coupon / Discount
     if any(w in lower for w in ['mã', 'khuyến mãi', 'voucher', 'coupon', 'ưu đãi', 'giảm giá', 'sale']):
         return (
-            "🎉 **Ưu đãi hấp dẫn đang áp dụng tại FreshFruit:**\n\n"
+            "🎉 **Ưu đãi hấp dẫn đang áp dụng tại Tuấn Hùng Fruit:**\n\n"
             "• Mã giảm giá: **FRESH10**\n"
             "• Mức giảm: **10%** trên tổng giá trị đơn hàng\n"
             "• Cách dùng: Bạn chỉ cần nhập mã **FRESH10** vào ô 'Mã giảm giá' ở trang Thanh toán.\n\n"
@@ -434,7 +457,7 @@ def get_smart_bot_reply(question: str, catalog: list) -> str:
     # 3. How to order / payment / delivery
     if any(w in lower for w in ['đặt hàng', 'mua hàng', 'thanh toán', 'mua như thế nào', 'cách đặt', 'vận chuyển', 'giao hàng', 'ship', 'cod']):
         return (
-            "📦 **Quy trình mua hàng cực kỳ dễ dàng tại FreshFruit:**\n\n"
+            "📦 **Quy trình mua hàng cực kỳ dễ dàng tại Tuấn Hùng Fruit:**\n\n"
             "1. **Tài khoản**: Đăng nhập hoặc Đăng ký nhanh nếu chưa có tài khoản.\n"
             "2. **Chọn mua**: Vào mục 'Sản phẩm', chọn hoa quả yêu thích và bấm 'Thêm vào giỏ'.\n"
             "3. **Thanh toán**: Mở Giỏ hàng → 'Tiến hành thanh toán', điền người nhận, địa chỉ và mã **FRESH10**.\n"
@@ -466,7 +489,7 @@ def get_smart_bot_reply(question: str, catalog: list) -> str:
         gift = next((p for p in catalog if 'giỏ quà' in p['name'].lower()), None)
         price_str = f"{gift['price']:,}đ" if gift else "399.000đ"
         return (
-            f"🎁 **Giỏ quà trái cây cao cấp FreshFruit ({price_str}/giỏ):**\n\n"
+            f"🎁 **Giỏ quà trái cây cao cấp Tuấn Hùng Fruit ({price_str}/giỏ):**\n\n"
             "• Thành phần: Tuyển chọn các loại quả thượng hạng trong ngày (Táo Fuji, Nho xanh không hạt, Cam Úc, Kiwi, Lê Hàn Quốc).\n"
             "• Thiết kế: Giỏ mây hoặc khay gỗ sang trọng, bọc màng co và trang trí nơ lụa tỉ mỉ.\n"
             "• Rất phù hợp: Làm quà biếu lễ, thăm hỏi người thân, bạn bè hoặc đối tác.\n\n"
@@ -504,7 +527,7 @@ def get_smart_bot_reply(question: str, catalog: list) -> str:
     if any(w in lower for w in ['giá', 'bảng giá', 'bao nhiêu', 'menu', 'sản phẩm', 'hoa quả', 'trái cây', 'danh mục', 'có gì', 'danh sách']):
         lines = [f"• **{p['name']}**: {p['price']:,}đ/{p['unit']} ({'Còn ' + str(p['stock']) if p['stock'] > 0 else 'Hết hàng'})" for p in catalog[:12]]
         return (
-            "🛒 **Danh mục & Bảng giá trái cây tươi tại FreshFruit:**\n\n"
+            "🛒 **Danh mục & Bảng giá trái cây tươi tại Tuấn Hùng Fruit:**\n\n"
             + "\n".join(lines)
             + "\n\n💡 Nhập mã **FRESH10** khi thanh toán để nhận ngay giảm giá 10%!"
         )
@@ -521,7 +544,7 @@ def get_smart_bot_reply(question: str, catalog: list) -> str:
 
     # Default fallback
     return (
-        "Cảm ơn bạn đã nhắn tin cho FreshFruit! 🍃\n\n"
+        "Cảm ơn bạn đã nhắn tin cho Tuấn Hùng Fruit! 🍃\n\n"
         "Bạn có thể hỏi mình về:\n"
         "• Bảng giá các loại quả: Táo, Cam, Nho, Dâu tây, Xoài, Kiwi, Dưa hấu...\n"
         "• Mã giảm giá ưu đãi (**FRESH10** - giảm 10%)\n"
@@ -561,7 +584,7 @@ def chat():
                     clean_history.append({'role': msg['role'], 'content': msg['content'][:1000]})
                     
             system_prompt = (
-                "Bạn là FreshAI, trợ lý ảo thông minh của cửa hàng FreshFruit tại Việt Nam. "
+                "Bạn là Tuấn Hùng AI, trợ lý ảo thông minh của cửa hàng hoa quả Tuấn Hùng Fruit tại Việt Nam. "
                 "Hãy trả lời bằng tiếng Việt tự nhiên, thân thiện, súc tích. "
                 "Tư vấn hoa quả, dinh dưỡng, cách bảo quản và hướng dẫn đặt mua. "
                 "Thông tin sản phẩm đang có tại cửa hàng:\n"
@@ -589,9 +612,9 @@ def chat():
     
     note = ""
     if openai_error and ('insufficient_quota' in openai_error or '429' in openai_error or 'credit_balance_exhausted' in openai_error):
-        note = "\n\n*(Ghi chú: Khóa OPENAI_API_KEY trong .env hiện đã dùng hết hạn mức credit quota trên OpenAI. Trợ lý thông minh FreshFruit đang trả lời tự động cho bạn!)*"
+        note = "\n\n*(Ghi chú: Khóa OPENAI_API_KEY trong .env hiện đã dùng hết hạn mức credit quota trên OpenAI. Trợ lý thông minh Tuấn Hùng AI đang trả lời tự động cho bạn!)*"
     elif openai_error and ('401' in openai_error or 'Incorrect API key' in openai_error):
-        note = "\n\n*(Ghi chú: OPENAI_API_KEY chưa chính xác. Trợ lý thông minh FreshFruit đang trả lời tự động.)*"
+        note = "\n\n*(Ghi chú: OPENAI_API_KEY chưa chính xác. Trợ lý thông minh Tuấn Hùng AI đang trả lời tự động.)*"
 
     return jsonify(reply=smart_reply + note, mode='smart_bot')
 
@@ -605,4 +628,3 @@ if os.getenv('AUTO_INIT_DB', '1') == '1':
 
 if __name__ == '__main__':
     app.run(debug=os.getenv('FLASK_DEBUG', '0') == '1', port=int(os.getenv('PORT', '5000')))
-
