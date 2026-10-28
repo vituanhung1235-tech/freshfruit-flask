@@ -94,11 +94,11 @@ class ApplicationFlowTests(unittest.TestCase):
             adapt_postgres_sql(
                 'INSERT INTO cart_items(user_id, product_id, quantity) '
                 'VALUES(?,?,?) ON CONFLICT(user_id, product_id) '
-                'DO UPDATE SET quantity=quantity+excluded.quantity'
+                'DO UPDATE SET quantity=cart_items.quantity+excluded.quantity'
             ),
             'INSERT INTO cart_items(user_id, product_id, quantity) '
             'VALUES(%s,%s,%s) ON CONFLICT(user_id, product_id) '
-            'DO UPDATE SET quantity=quantity+excluded.quantity RETURNING id',
+            'DO UPDATE SET quantity=cart_items.quantity+excluded.quantity RETURNING id',
         )
         self.assertTrue(any('CREATE TABLE IF NOT EXISTS orders' in sql for sql in POSTGRES_SCHEMA))
 

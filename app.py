@@ -296,7 +296,7 @@ def product(pid):
         if quantity + (old['quantity'] if old else 0) > p['stock']:
             flash('Không đủ hàng trong kho.', 'danger')
             return redirect(url_for('product', pid=pid))
-        db().execute('INSERT INTO cart_items(user_id, product_id, quantity) VALUES(?,?,?) ON CONFLICT(user_id, product_id) DO UPDATE SET quantity=quantity+excluded.quantity', (session['user_id'], pid, quantity))
+        db().execute('INSERT INTO cart_items(user_id, product_id, quantity) VALUES(?,?,?) ON CONFLICT(user_id, product_id) DO UPDATE SET quantity=cart_items.quantity+excluded.quantity', (session['user_id'], pid, quantity))
         db().commit()
         flash('Đã thêm vào giỏ hàng.', 'success')
         return redirect(url_for('cart'))
