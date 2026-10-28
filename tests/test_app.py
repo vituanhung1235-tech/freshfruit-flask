@@ -621,8 +621,10 @@ class ApplicationFlowTests(unittest.TestCase):
                 'image': (io.BytesIO(b'not an image'), 'fake.png'),
             },
             content_type='multipart/form-data',
+            follow_redirects=True,
         )
-        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('Tệp tải lên không phải ảnh hợp lệ.', response.get_data(as_text=True))
         with app_module.app.app_context():
             product = app_module.db().execute(
                 'SELECT id FROM products WHERE name=?', ('Fake Image Fruit',)

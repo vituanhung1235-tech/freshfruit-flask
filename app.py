@@ -555,8 +555,11 @@ def admin_product():
         description = request.form.get('description', '').strip()[:500]
         emoji = request.form.get('emoji', '🍎').strip()[:10]
         uploaded_image = encode_product_image(request.files.get('image'))
-        price = int(request.form['price'])
-        stock = int(request.form['stock'])
+        try:
+            price = int(request.form['price'])
+            stock = int(request.form['stock'])
+        except ValueError as error:
+            raise ValueError('Giá và tồn kho phải là số nguyên hợp lệ.') from error
         if not name or not category or not unit or price < 0 or stock < 0:
             raise ValueError()
         if uploaded_image is not None:
@@ -574,9 +577,16 @@ def admin_product():
             db().execute('INSERT INTO products(name, category, price, unit, description, emoji, image, stock) VALUES(?,?,?,?,?,?,?,?)', (name, category, price, unit, description, emoji, image, stock))
         db().commit()
         flash('Đã lưu sản phẩm thành công.', 'success')
-    except (ValueError, KeyError, *DB_ERROR_TYPES):
+    except ValueError as error:
         db().rollback()
-        flash('Không thể lưu sản phẩm. Vui lòng kiểm tra lại thông tin.', 'danger')
+        flash(str(error) or 'Thông tin sản phẩm không hợp lệ.', 'danger')
+    except KeyError:
+        db().rollback()
+        flash('Vui lòng điền đủ tên, danh mục, giá, đơn vị và tồn kho.', 'danger')
+    except DB_ERROR_TYPES:
+        db().rollback()
+        app.logger.exception('Failed to save product from the admin dashboard.')
+        flash('Không thể lưu sản phẩm do lỗi database. Vui lòng thử lại sau.', 'danger')
     return redirect(url_for('admin'))
 
 @app.post('/admin/product/<int:pid>/toggle')
