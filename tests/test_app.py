@@ -251,9 +251,9 @@ class ApplicationFlowTests(unittest.TestCase):
         self.assertEqual(admin['role'], 'admin')
         self.assertEqual(user_count, 1)
 
-    def test_vercel_requires_a_stable_secret_key(self):
+    def test_vercel_requires_stable_session_key_and_shared_database(self):
         environment = os.environ.copy()
-        environment.update(VERCEL='1', AUTO_INIT_DB='0')
+        environment.update(VERCEL='1', AUTO_INIT_DB='0', DATABASE_URL='')
         for key in ('SECRET_KEY', 'ADMIN_EMAIL', 'ADMIN_PASSWORD', 'ADMIN_NAME'):
             environment.pop(key, None)
         environment['SECRET_KEY'] = ''
@@ -274,6 +274,18 @@ class ApplicationFlowTests(unittest.TestCase):
         self.assertIn('SECRET_KEY must be configured', missing_key.stderr)
 
         environment['SECRET_KEY'] = 'stable-vercel-test-key'
+        missing_database = subprocess.run(
+            [sys.executable, '-c', 'import app'],
+            cwd=PROJECT_ROOT,
+            env=environment,
+            capture_output=True,
+            text=True,
+        )
+
+        self.assertNotEqual(missing_database.returncode, 0)
+        self.assertIn('DATABASE_URL must be configured', missing_database.stderr)
+
+        environment['DATABASE_URL'] = 'postgresql://test:test@localhost/test'
         configured_key = subprocess.run(
             [
                 sys.executable,

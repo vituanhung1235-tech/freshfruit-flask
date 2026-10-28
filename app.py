@@ -37,13 +37,13 @@ app.config['SESSION_COOKIE_SECURE'] = os.getenv(
     '1' if os.getenv('VERCEL') else '0',
 ) == '1'
 
-# SQLite remains the local default. Vercel can use a shared PostgreSQL database.
+# SQLite is the local default; Vercel requires shared PostgreSQL storage.
 if DATABASE_URL:
     DB_PATH = None
 elif os.getenv("VERCEL"):
-    DB_PATH = "/tmp/freshfruit.db"
-    app.logger.warning(
-        'DATABASE_URL is not configured; Vercel is using temporary SQLite storage.'
+    raise RuntimeError(
+        'DATABASE_URL must be configured on Vercel. '
+        'Use a shared PostgreSQL database; SQLite storage is temporary across function instances.'
     )
 else:
     DB_PATH = os.getenv(

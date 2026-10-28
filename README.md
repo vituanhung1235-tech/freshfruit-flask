@@ -93,7 +93,7 @@ Vercel cần PostgreSQL dùng chung để tài khoản, phiên làm việc, gi�
 ### Cấu hình và deploy Vercel
 
 1. Vào **Vercel → Project → Settings → Environment Variables** và đặt các biến cho **Production** (thêm Preview nếu cần):
-   - `DATABASE_URL`: cùng Neon connection string đã dùng để chuyển dữ liệu.
+   - `DATABASE_URL`: bắt buộc; cùng Neon connection string đã dùng để chuyển dữ liệu. App sẽ không khởi động trên Vercel nếu thiếu database dùng chung, vì SQLite tạm trên từng function làm tài khoản/giỏ hàng mất đồng bộ.
    - `SECRET_KEY`: bắt buộc; khóa ngẫu nhiên dài, ổn định giữa các lần deploy và dùng chung cho Production/Preview tương ứng. Tạo local bằng `py -c "import secrets; print(secrets.token_urlsafe(48))"`. App sẽ không khởi động trên Vercel nếu thiếu khóa này, vì cookie phiên và CSRF token sẽ lỗi giữa các function instance.
    - `ADMIN_EMAIL`, `ADMIN_PASSWORD` (ít nhất 12 ký tự), `ADMIN_NAME`.
    - `COOKIE_SECURE=1`.
@@ -101,7 +101,7 @@ Vercel cần PostgreSQL dùng chung để tài khoản, phiên làm việc, gi�
 2. Nếu dùng quên mật khẩu qua email, đặt thêm `APP_BASE_URL` bằng URL Production và các biến SMTP: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `MAIL_FROM`.
 3. Sau khi xác nhận biến đã lưu, redeploy Production từ nhánh `main`.
 
-Không gửi credential hoặc connection string cho người khác, và không commit chúng vào source code. Nếu `DATABASE_URL` chưa được cấu hình trên Vercel, app vẫn có thể chạy SQLite tạm thời để báo lỗi cấu hình trong log, nhưng dữ liệu đó không bền và không đồng bộ. PostgreSQL được khởi tạo schema tự động; tài khoản admin được tạo/cập nhật từ các biến `ADMIN_*`.
+Không gửi credential hoặc connection string cho người khác, và không commit chúng vào source code. PostgreSQL được khởi tạo schema tự động; tài khoản admin được tạo/cập nhật từ các biến `ADMIN_*`.
 
 ### Kiểm tra sau deploy
 
