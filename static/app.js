@@ -97,6 +97,40 @@
   startTimer();
 })();
 
+// Recalculate and persist all cart quantities together.
+(function initCartAutoUpdate() {
+  const form = document.getElementById('cart-quantity-form');
+  if (!form) return;
+
+  const formatter = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
+  const subtotal = document.getElementById('cart-subtotal');
+  const status = document.getElementById('cart-save-status');
+  let submitTimer = null;
+
+  function recalculate() {
+    let total = 0;
+    form.querySelectorAll('.cart-row').forEach(row => {
+      const input = row.querySelector('[data-cart-quantity]');
+      const quantity = Math.max(0, Math.floor(Number(input.value) || 0));
+      const lineTotal = Number(row.dataset.unitPrice) * quantity;
+      row.querySelector('.cart-line-total').textContent = formatter.format(lineTotal) + 'đ';
+      total += lineTotal;
+    });
+    subtotal.textContent = formatter.format(total) + 'đ';
+  }
+
+  form.addEventListener('input', event => {
+    if (!event.target.matches('[data-cart-quantity]')) return;
+    recalculate();
+    status.textContent = 'Đang chờ lưu thay đổi...';
+    clearTimeout(submitTimer);
+    submitTimer = setTimeout(() => {
+      status.textContent = 'Đang lưu giỏ hàng...';
+      form.requestSubmit();
+    }, 650);
+  });
+})();
+
 // 2. CHATBOT TUẤN HÙNG AI
 const toggle = document.getElementById('chat-toggle');
 const chat = document.getElementById('chatbox');

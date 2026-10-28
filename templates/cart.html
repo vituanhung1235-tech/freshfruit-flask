@@ -1,1 +1,35 @@
-{% extends 'base.html' %}{% block title %}Giỏ hàng{% endblock %}{% block content %}<div class="container"><div class="page-head" style="margin: 35px 0 20px;"><h1>🛒 Giỏ hàng của bạn</h1></div>{% if rows %}<div class="cart-layout"><div class="panel">{% for p in rows %}<div class="cart-row"><div class="cart-emoji">{% if p.image %}<img src="{{product_image_src(p)}}" alt="{{p.name}}" class="cart-img" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block';"><span style="display:none;">{{p.emoji}}</span>{% else %}<span>{{p.emoji}}</span>{% endif %}</div><div class="cart-meta"><strong>{{p.name}}</strong><small>{{money(p.price)}} / {{p.unit}}</small></div><form method="post" action="{{url_for('cart_update',pid=p.id)}}" class="qty-form"><input type="hidden" name="_csrf" value="{{csrf_token()}}"><input type="number" name="quantity" value="{{p.quantity}}" min="0" max="{{p.stock}}"><button>Cập nhật</button></form><strong>{{money(p.price*p.quantity)}}</strong></div>{% endfor %}</div><aside class="panel summary"><h2>Tổng đơn hàng</h2><div class="space"><span>Tạm tính</span><strong>{{money(total)}}</strong></div><p class="muted">Mã giảm giá nhập tại bước thanh toán</p><a class="cta full center" href="{{url_for('checkout')}}">Tiến hành thanh toán →</a></aside></div>{% else %}<div class="empty">🛒<h2>Giỏ hàng của bạn đang trống</h2><a class="cta" href="{{url_for('products')}}">Mua sắm ngay</a></div>{% endif %}</div>{% endblock %}
+{% extends 'base.html' %}
+{% block title %}Giỏ hàng{% endblock %}
+{% block content %}
+<div class="container">
+	<div class="page-head" style="margin: 35px 0 20px;"><h1>🛒 Giỏ hàng của bạn</h1></div>
+	{% if rows %}
+	<div class="cart-layout">
+		<div class="panel">
+			<form method="post" action="{{url_for('cart_update_all')}}" class="cart-quantity-form" id="cart-quantity-form">
+				<input type="hidden" name="_csrf" value="{{csrf_token()}}">
+				{% for p in rows %}
+				<div class="cart-row" data-unit-price="{{p.price}}">
+					<div class="cart-emoji">
+						{% if p.image %}<img src="{{product_image_src(p)}}" alt="{{p.name}}" class="cart-img" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block';"><span style="display:none;">{{p.emoji}}</span>{% else %}<span>{{p.emoji}}</span>{% endif %}
+					</div>
+					<div class="cart-meta"><strong>{{p.name}}</strong><small>{{money(p.price)}} / {{p.unit}}</small></div>
+					<label class="cart-quantity-label"><span class="visually-hidden">Số lượng {{p.name}}</span><input type="number" name="quantity_{{p.id}}" value="{{p.quantity}}" min="0" max="{{p.stock}}" data-cart-quantity></label>
+					<strong class="cart-line-total">{{money(p.price*p.quantity)}}</strong>
+				</div>
+				{% endfor %}
+			</form>
+		</div>
+		<aside class="panel summary">
+			<h2>Tổng đơn hàng</h2>
+			<div class="space"><span>Tạm tính</span><strong id="cart-subtotal" class="cart-total">{{money(total)}}</strong></div>
+			<p class="cart-save-status muted" id="cart-save-status" aria-live="polite">Thay đổi số lượng sẽ tự lưu.</p>
+			<p class="muted">Mã giảm giá nhập tại bước thanh toán</p>
+			<a class="cta full center" href="{{url_for('checkout')}}">Tiến hành thanh toán →</a>
+		</aside>
+	</div>
+	{% else %}
+	<div class="empty">🛒<h2>Giỏ hàng của bạn đang trống</h2><a class="cta" href="{{url_for('products')}}">Mua sắm ngay</a></div>
+	{% endif %}
+</div>
+{% endblock %}

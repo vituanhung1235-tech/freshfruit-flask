@@ -679,6 +679,53 @@ class ApplicationFlowTests(unittest.TestCase):
         self.assertEqual(item['quantity'], 3)
         self.assertEqual(final_stock, initial_stock['stock'] - 3)
 
+    def test_cart_auto_updates_multiple_quantities_and_rolls_back_oversell(self):
+        user_id = self.create_admin()
+        with app_module.app.app_context():
+            app_module.db().execute(
+                'INSERT INTO cart_items(user_id,product_id,quantity) VALUES(?,?,?)',
+                (user_id, 1, 1),
+            )
+            app_module.db().execute(
+                'INSERT INTO cart_items(user_id,product_id,quantity) VALUES(?,?,?)',
+                (user_id, 2, 1),
+            )
+            app_module.db().commit()
+        with self.client.session_transaction() as session:
+            session.update(user_id=user_id, email='admin@example.com')
+
+        page = self.client.get('/cart')
+        self.assertEqual(page.status_code, 200)
+        self.assertIn(b'data-cart-quantity', page.data)
+        self.assertIn(b'id="cart-subtotal"', page.data)
+        token = self.csrf_token('/cart')
+        response = self.client.post(
+            '/cart/update',
+            data={'_csrf': token, 'quantity_1': '3', 'quantity_2': '0'},
+        )
+        self.assertEqual(response.status_code, 302)
+        with app_module.app.app_context():
+            rows = app_module.db().execute(
+                'SELECT product_id,quantity FROM cart_items WHERE user_id=? ORDER BY product_id',
+                (user_id,),
+            ).fetchall()
+        self.assertEqual([(row['product_id'], row['quantity']) for row in rows], [(1, 3)])
+
+        token = self.csrf_token('/cart')
+        response = self.client.post(
+            '/cart/update',
+            data={'_csrf': token, 'quantity_1': '4', 'quantity_2': '999'},
+            follow_redirects=True,
+        )
+        self.assertEqual(response.status_code, 200)
+        self.assertIn('Số lượng vượt tồn kho hoặc sản phẩm đã ngừng bán.', response.get_data(as_text=True))
+        with app_module.app.app_context():
+            quantity = app_module.db().execute(
+                'SELECT quantity FROM cart_items WHERE user_id=? AND product_id=1',
+                (user_id,),
+            ).fetchone()['quantity']
+        self.assertEqual(quantity, 3)
+
     def test_staff_roles_have_separate_workspaces(self):
         role_users = {}
         with app_module.app.app_context():

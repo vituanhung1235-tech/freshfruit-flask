@@ -3787,3 +3787,17 @@ td { padding: 12px 14px; border-bottom: 1px solid var(--line); }
   .packing-order-foot form, .packing-order-foot button { width: 100%; }
   .ops-links { display: grid; grid-template-columns: 1fr; }
 }
+
+.cart-row .cart-line-total { min-width: 112px; color: #a94316; font-size: 23px; font-weight: 800; text-align: right; }
+.cart-quantity-label input { width: 82px; min-height: 48px; padding: 8px; border: 1px solid #c9d8ce; border-radius: 8px; text-align: center; font-size: 18px; font-weight: 700; }
+.summary h2 { font-size: 25px; }
+.summary .cart-total { color: #a94316; font-size: 30px; font-weight: 850; white-space: nowrap; }
+.cart-save-status { min-height: 20px; font-size: 13px; }
+
+@media (max-width: 640px) {
+  .cart-row { display: grid; grid-template-columns: 64px minmax(0, 1fr) auto; gap: 12px; }
+  .cart-emoji { width: 64px; height: 64px; grid-row: span 2; }
+  .cart-quantity-label input { width: 72px; min-height: 44px; font-size: 17px; }
+  .cart-row .cart-line-total { grid-column: 3; min-width: auto; font-size: 20px; }
+  .summary .cart-total { font-size: 26px; }
+}

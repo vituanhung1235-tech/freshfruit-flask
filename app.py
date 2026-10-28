@@ -485,6 +485,56 @@ def cart():
     rows, total = cart_rows()
     return render_template('cart.html', rows=rows, total=total)
 
+@app.post('/cart/update')
+@login_required
+def cart_update_all():
+    requested = [
+        (key, value)
+        for key, value in request.form.items()
+        if re.fullmatch(r'quantity_\d+', key)
+    ]
+    if not requested or len(requested) > 40:
+        abort(400)
+
+    conn = db()
+    try:
+        if not DATABASE_URL:
+            conn.execute('BEGIN IMMEDIATE')
+        lock_clause = ' FOR UPDATE' if DATABASE_URL else ''
+        updates = []
+        for key, value in requested:
+            product_id = int(key.removeprefix('quantity_'))
+            quantity = int(value)
+            if not 0 <= quantity <= 999:
+                raise ValueError('Số lượng phải từ 0 đến 999.')
+            if quantity == 0:
+                updates.append((product_id, quantity))
+                continue
+            product = conn.execute(
+                'SELECT stock FROM products WHERE id=? AND active=1' + lock_clause,
+                (product_id,),
+            ).fetchone()
+            if not product or quantity > product['stock']:
+                raise ValueError('Số lượng vượt tồn kho hoặc sản phẩm đã ngừng bán.')
+            updates.append((product_id, quantity))
+
+        for product_id, quantity in updates:
+            if quantity == 0:
+                conn.execute(
+                    'DELETE FROM cart_items WHERE user_id=? AND product_id=?',
+                    (session['user_id'], product_id),
+                )
+            else:
+                conn.execute(
+                    'UPDATE cart_items SET quantity=? WHERE user_id=? AND product_id=?',
+                    (quantity, session['user_id'], product_id),
+                )
+        conn.commit()
+    except (ValueError, *DB_ERROR_TYPES) as error:
+        conn.rollback()
+        flash(str(error) or 'Không thể cập nhật giỏ hàng.', 'danger')
+    return redirect(url_for('cart'))
+
 @app.post('/cart/update/<int:pid>')
 @login_required
 def cart_update(pid):
