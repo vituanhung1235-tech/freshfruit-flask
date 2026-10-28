@@ -568,15 +568,23 @@ def admin_product():
             existing = db().execute(
                 'SELECT image FROM products WHERE id=?', (pid,)
             ).fetchone()
-            image = existing['image'] if existing else ''
+            if not existing:
+                raise ValueError('Không tìm thấy sản phẩm theo ID để cập nhật.')
+            image = existing['image']
         else:
             image = ''
         if pid:
             db().execute('UPDATE products SET name=?, category=?, price=?, unit=?, description=?, emoji=?, image=?, stock=? WHERE id=?', (name, category, price, unit, description, emoji, image, stock, pid))
+            saved_id = pid
         else:
-            db().execute('INSERT INTO products(name, category, price, unit, description, emoji, image, stock) VALUES(?,?,?,?,?,?,?,?)', (name, category, price, unit, description, emoji, image, stock))
+            cursor = db().execute('INSERT INTO products(name, category, price, unit, description, emoji, image, stock) VALUES(?,?,?,?,?,?,?,?)', (name, category, price, unit, description, emoji, image, stock))
+            saved_id = cursor.lastrowid
         db().commit()
-        flash('Đã lưu sản phẩm thành công.', 'success')
+        flash(
+            'Đã cập nhật sản phẩm thành công.' if pid else 'Đã thêm sản phẩm thành công.',
+            'success',
+        )
+        return redirect(url_for('admin', _anchor=f'product-{saved_id}'))
     except ValueError as error:
         db().rollback()
         flash(str(error) or 'Thông tin sản phẩm không hợp lệ.', 'danger')

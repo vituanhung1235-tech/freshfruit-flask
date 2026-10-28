@@ -498,6 +498,10 @@ class ApplicationFlowTests(unittest.TestCase):
             ).fetchone()
         self.assertEqual(count, 1)
         self.assertIsNotNone(product)
+        self.assertEqual(
+            response.headers['Location'],
+            f'/admin#product-{product["id"]}',
+        )
 
     def test_admin_deletes_unreferenced_products_and_archives_referenced_products(self):
         admin_id = self.create_admin()

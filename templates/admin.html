@@ -33,9 +33,9 @@
 				<thead><tr><th>ID</th><th>Hình ảnh</th><th>Sản phẩm</th><th>Giá</th><th>Tồn kho</th><th>Hiển thị</th><th>Thao tác</th></tr></thead>
 				<tbody>
 					{% for p in products %}
-					<tr>
+					<tr id="product-{{p.id}}">
 						<td>{{p.id}}</td>
-						<td>{% if p.image %}<img src="{{p.image}}" alt="{{p.name}}" style="width:45px;height:45px;object-fit:cover;border-radius:8px;vertical-align:middle;">{% else %}<span style="font-size:24px;">{{p.emoji}}</span>{% endif %}</td>
+						<td>{% if p.image %}<img src="{{product_image_src(p)}}" alt="{{p.name}}" style="width:45px;height:45px;object-fit:cover;border-radius:8px;vertical-align:middle;">{% else %}<span style="font-size:24px;">{{p.emoji}}</span>{% endif %}</td>
 						<td><strong>{{p.name}}</strong><br><small class="muted">{{p.category}}</small></td>
 						<td>{{money(p.price)}}</td>
 						<td>{{p.stock}}</td>
