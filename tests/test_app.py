@@ -13,6 +13,7 @@ from pathlib import Path
 from unittest.mock import patch
 
 from werkzeug.security import generate_password_hash
+from PIL import Image
 
 # Tests must never connect to the database configured in the developer's .env.
 os.environ['DATABASE_URL'] = ''
@@ -546,6 +547,87 @@ class ApplicationFlowTests(unittest.TestCase):
         self.assertIsNone(removed)
         self.assertEqual(archived['active'], 0)
         self.assertEqual(cart_item['quantity'], 1)
+
+    def test_admin_uploads_product_image_and_preserves_it_on_edit(self):
+        admin_id = self.create_admin()
+        with self.client.session_transaction() as session:
+            session.update(user_id=admin_id, email='admin@example.com')
+
+        image_buffer = io.BytesIO()
+        Image.new('RGB', (32, 24), (35, 120, 80)).save(image_buffer, format='PNG')
+        image_buffer.seek(0)
+        token = self.csrf_token('/admin')
+        response = self.client.post(
+            '/admin/product',
+            data={
+                '_csrf': token,
+                'name': 'Uploaded Fruit',
+                'category': 'Test',
+                'unit': 'kg',
+                'price': '12000',
+                'stock': '8',
+                'image': (image_buffer, 'fruit.png'),
+            },
+            content_type='multipart/form-data',
+        )
+        self.assertEqual(response.status_code, 302)
+        with app_module.app.app_context():
+            product = app_module.db().execute(
+                'SELECT id, image FROM products WHERE name=?', ('Uploaded Fruit',)
+            ).fetchone()
+        self.assertTrue(product['image'].startswith('data:image/png;base64,'))
+
+        image_response = self.client.get(f"/product/{product['id']}/image")
+        self.assertEqual(image_response.status_code, 200)
+        self.assertEqual(image_response.mimetype, 'image/png')
+        with Image.open(io.BytesIO(image_response.data)) as uploaded:
+            self.assertEqual(uploaded.size, (32, 24))
+
+        token = self.csrf_token('/admin')
+        response = self.client.post(
+            '/admin/product',
+            data={
+                '_csrf': token,
+                'id': str(product['id']),
+                'name': 'Uploaded Fruit Updated',
+                'category': 'Test',
+                'unit': 'kg',
+                'price': '13000',
+                'stock': '7',
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        with app_module.app.app_context():
+            updated = app_module.db().execute(
+                'SELECT image FROM products WHERE id=?', (product['id'],)
+            ).fetchone()
+        self.assertEqual(updated['image'], product['image'])
+
+    def test_admin_rejects_non_image_upload(self):
+        admin_id = self.create_admin()
+        with self.client.session_transaction() as session:
+            session.update(user_id=admin_id, email='admin@example.com')
+
+        token = self.csrf_token('/admin')
+        response = self.client.post(
+            '/admin/product',
+            data={
+                '_csrf': token,
+                'name': 'Fake Image Fruit',
+                'category': 'Test',
+                'unit': 'kg',
+                'price': '12000',
+                'stock': '8',
+                'image': (io.BytesIO(b'not an image'), 'fake.png'),
+            },
+            content_type='multipart/form-data',
+        )
+        self.assertEqual(response.status_code, 302)
+        with app_module.app.app_context():
+            product = app_module.db().execute(
+                'SELECT id FROM products WHERE name=?', ('Fake Image Fruit',)
+            ).fetchone()
+        self.assertIsNone(product)
 
     def create_admin(self, email='admin@example.com'):
         with app_module.app.app_context():

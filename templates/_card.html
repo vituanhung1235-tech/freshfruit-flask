@@ -7,7 +7,7 @@
   </div>
   <a href="{{url_for('product',pid=p.id)}}" class="fruit-visual">
     {% if p.image %}
-      <img src="{{p.image}}" alt="{{p.name}}" class="fruit-img" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block';">
+      <img src="{{product_image_src(p)}}" alt="{{p.name}}" class="fruit-img" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block';">
       <span class="fruit-fallback" style="display:none;">{{p.emoji}}</span>
     {% else %}
       <span>{{p.emoji}}</span>

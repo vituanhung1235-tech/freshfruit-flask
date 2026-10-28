@@ -1,8 +1,10 @@
-import os, sqlite3, json, re, secrets
+import base64, io, os, sqlite3, json, re, secrets
 from datetime import datetime
 from functools import wraps
 from pathlib import Path
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, g, abort
+from flask import send_file
+from PIL import Image, ImageOps, UnidentifiedImageError
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
 
@@ -29,7 +31,7 @@ if not secret_key:
     else:
         secret_key = 'local-dev-change-this-secret'
 app.config['SECRET_KEY'] = secret_key
-app.config['MAX_CONTENT_LENGTH'] = 1024 * 1024
+app.config['MAX_CONTENT_LENGTH'] = 2 * 1024 * 1024
 app.config['SESSION_COOKIE_HTTPONLY'] = True
 app.config['SESSION_COOKIE_SAMESITE'] = 'Lax'
 app.config['SESSION_COOKIE_SECURE'] = os.getenv(
@@ -66,6 +68,47 @@ PRODUCTS = [
     ('Lê Hàn Quốc', 'Nhập khẩu', 99000, 'kg', 'Lê nâu Hàn Quốc mọng nước, vỏ mỏng thịt giòn ngọt, thanh nhiệt cơ thể.', '🍐', '/static/images/pear.jpg', 32),
     ('Giỏ quà trái cây', 'Giỏ quà', 399000, 'giỏ', 'Giỏ quà thiết kế sang trọng, kết hợp các loại trái cây cao cấp tươi ngon trong ngày.', '🎁', '/static/images/giftbasket.jpg', 18),
 ]
+
+MAX_PRODUCT_IMAGE_BYTES = 1024 * 1024
+PRODUCT_IMAGE_MIME_TYPES = {
+    'JPEG': 'image/jpeg',
+    'PNG': 'image/png',
+    'WEBP': 'image/webp',
+}
+
+
+def encode_product_image(upload):
+    if not upload or not upload.filename:
+        return None
+
+    raw_image = upload.stream.read(MAX_PRODUCT_IMAGE_BYTES + 1)
+    if len(raw_image) > MAX_PRODUCT_IMAGE_BYTES:
+        raise ValueError('Ảnh vượt quá dung lượng 1 MB.')
+
+    try:
+        with Image.open(io.BytesIO(raw_image)) as source:
+            image_format = source.format
+            if image_format not in PRODUCT_IMAGE_MIME_TYPES:
+                raise ValueError('Chỉ chấp nhận ảnh JPG, PNG hoặc WebP.')
+            if source.width * source.height > 20_000_000:
+                raise ValueError('Kích thước ảnh quá lớn.')
+
+            image = ImageOps.exif_transpose(source)
+            image.thumbnail((1600, 1600), Image.Resampling.LANCZOS)
+            if image_format == 'JPEG' and image.mode not in ('RGB', 'L'):
+                image = image.convert('RGB')
+
+            output = io.BytesIO()
+            save_options = {'optimize': True}
+            if image_format in ('JPEG', 'WEBP'):
+                save_options['quality'] = 85
+            image.save(output, format=image_format, **save_options)
+    except (UnidentifiedImageError, OSError, Image.DecompressionBombError) as error:
+        raise ValueError('Tệp tải lên không phải ảnh hợp lệ.') from error
+
+    encoded = base64.b64encode(output.getvalue()).decode('ascii')
+    mime_type = PRODUCT_IMAGE_MIME_TYPES[image_format]
+    return f'data:{mime_type};base64,{encoded}'
 
 def db():
     if 'db' not in g:
@@ -193,6 +236,11 @@ def inject():
         'cart_count': count,
         'current_user': session.get('name'),
         'is_admin': session.get('role') == 'admin',
+        'product_image_src': lambda product: (
+            url_for('uploaded_product_image', pid=product['id'])
+            if (product['image'] or '').startswith('data:image/')
+            else product['image']
+        ),
         'money': lambda x: f'{int(x):,}'.replace(',', '.') + 'đ'
     }
 
@@ -302,6 +350,26 @@ def product(pid):
         return redirect(url_for('cart'))
     reviews = db().execute('SELECT r.*, u.name FROM reviews r JOIN users u ON r.user_id=u.id WHERE r.product_id=? ORDER BY r.id DESC', (pid,)).fetchall()
     return render_template('product.html', p=p, reviews=reviews)
+
+@app.get('/product/<int:pid>/image')
+def uploaded_product_image(pid):
+    product = db().execute(
+        'SELECT image FROM products WHERE id=?',
+        (pid,),
+    ).fetchone()
+    image = product['image'] if product else ''
+    if not image or not image.startswith('data:image/'):
+        abort(404)
+
+    header, separator, encoded = image.partition(',')
+    mime_type = header[5:-7] if header.endswith(';base64') else ''
+    if not separator or mime_type not in PRODUCT_IMAGE_MIME_TYPES.values():
+        abort(404)
+    try:
+        image_bytes = base64.b64decode(encoded, validate=True)
+    except ValueError:
+        abort(404)
+    return send_file(io.BytesIO(image_bytes), mimetype=mime_type, max_age=3600)
 
 @app.post('/product/<int:pid>/review')
 @login_required
@@ -486,11 +554,20 @@ def admin_product():
         unit = request.form['unit'].strip()[:20]
         description = request.form.get('description', '').strip()[:500]
         emoji = request.form.get('emoji', '🍎').strip()[:10]
-        image = request.form.get('image', '').strip()[:500]
+        uploaded_image = encode_product_image(request.files.get('image'))
         price = int(request.form['price'])
         stock = int(request.form['stock'])
         if not name or not category or not unit or price < 0 or stock < 0:
             raise ValueError()
+        if uploaded_image is not None:
+            image = uploaded_image
+        elif pid:
+            existing = db().execute(
+                'SELECT image FROM products WHERE id=?', (pid,)
+            ).fetchone()
+            image = existing['image'] if existing else ''
+        else:
+            image = ''
         if pid:
             db().execute('UPDATE products SET name=?, category=?, price=?, unit=?, description=?, emoji=?, image=?, stock=? WHERE id=?', (name, category, price, unit, description, emoji, image, stock, pid))
         else:
