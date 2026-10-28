@@ -14,6 +14,10 @@ from unittest.mock import patch
 
 from werkzeug.security import generate_password_hash
 
+# Tests must never connect to the database configured in the developer's .env.
+os.environ['DATABASE_URL'] = ''
+os.environ['POSTGRES_URL'] = ''
+
 from database import POSTGRES_SCHEMA, adapt_postgres_sql
 
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
@@ -493,6 +497,55 @@ class ApplicationFlowTests(unittest.TestCase):
             ).fetchone()
         self.assertEqual(count, 1)
         self.assertIsNotNone(product)
+
+    def test_admin_deletes_unreferenced_products_and_archives_referenced_products(self):
+        admin_id = self.create_admin()
+        with app_module.app.app_context():
+            removable_id = app_module.db().execute(
+                'INSERT INTO products(name, category, price, unit, description, emoji, stock) '
+                'VALUES(?,?,?,?,?,?,?)',
+                ('Removable Fruit', 'Test', 1000, 'kg', 'Test', '🍎', 5),
+            ).lastrowid
+            archived_id = app_module.db().execute(
+                'INSERT INTO products(name, category, price, unit, description, emoji, stock) '
+                'VALUES(?,?,?,?,?,?,?)',
+                ('Archived Fruit', 'Test', 1000, 'kg', 'Test', '🍎', 5),
+            ).lastrowid
+            app_module.db().execute(
+                'INSERT INTO cart_items(user_id, product_id, quantity) VALUES(?,?,?)',
+                (admin_id, archived_id, 1),
+            )
+            app_module.db().commit()
+
+        with self.client.session_transaction() as session:
+            session.update(user_id=admin_id, email='admin@example.com')
+
+        token = self.csrf_token('/admin')
+        response = self.client.post(
+            f'/admin/product/{removable_id}/delete',
+            data={'_csrf': token},
+        )
+        self.assertEqual(response.status_code, 302)
+
+        token = self.csrf_token('/admin')
+        response = self.client.post(
+            f'/admin/product/{archived_id}/delete',
+            data={'_csrf': token},
+        )
+        self.assertEqual(response.status_code, 302)
+        with app_module.app.app_context():
+            removed = app_module.db().execute(
+                'SELECT id FROM products WHERE id=?', (removable_id,)
+            ).fetchone()
+            archived = app_module.db().execute(
+                'SELECT active FROM products WHERE id=?', (archived_id,)
+            ).fetchone()
+            cart_item = app_module.db().execute(
+                'SELECT quantity FROM cart_items WHERE product_id=?', (archived_id,)
+            ).fetchone()
+        self.assertIsNone(removed)
+        self.assertEqual(archived['active'], 0)
+        self.assertEqual(cart_item['quantity'], 1)
 
     def create_admin(self, email='admin@example.com'):
         with app_module.app.app_context():

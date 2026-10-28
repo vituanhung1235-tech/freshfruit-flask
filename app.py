@@ -509,6 +509,36 @@ def admin_product_toggle(pid):
     db().commit()
     return redirect(url_for('admin'))
 
+@app.post('/admin/product/<int:pid>/delete')
+@admin_required
+def admin_product_delete(pid):
+    product = db().execute('SELECT id FROM products WHERE id=?', (pid,)).fetchone()
+    if not product:
+        abort(404)
+
+    references = any(
+        db().execute(
+            f'SELECT 1 FROM {table} WHERE product_id=? LIMIT 1',
+            (pid,),
+        ).fetchone()
+        for table in ('cart_items', 'order_items', 'reviews')
+    )
+    if references:
+        db().execute('UPDATE products SET active=0 WHERE id=?', (pid,))
+        flash('Sản phẩm đã có dữ liệu liên quan nên được ngừng bán để giữ lịch sử.', 'warning')
+    else:
+        try:
+            db().execute('DELETE FROM products WHERE id=?', (pid,))
+            db().commit()
+            flash('Đã xóa sản phẩm.', 'success')
+            return redirect(url_for('admin'))
+        except DB_INTEGRITY_ERROR_TYPES:
+            db().rollback()
+            db().execute('UPDATE products SET active=0 WHERE id=?', (pid,))
+            flash('Sản phẩm vừa phát sinh dữ liệu liên quan nên đã được ngừng bán.', 'warning')
+    db().commit()
+    return redirect(url_for('admin'))
+
 @app.post('/admin/order/<int:oid>/status')
 @admin_required
 def admin_order_status(oid):
