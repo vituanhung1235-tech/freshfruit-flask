@@ -5,18 +5,26 @@ from pathlib import Path
 from flask import Flask, render_template, request, redirect, url_for, session, flash, jsonify, g, abort
 from werkzeug.security import generate_password_hash, check_password_hash
 from dotenv import load_dotenv
-from password_reset import create_password_reset_blueprint
 
 load_dotenv()
+
+from database import (
+    DATABASE_URL,
+    DB_ERROR_TYPES,
+    DB_INTEGRITY_ERROR_TYPES,
+    connect_postgres,
+    initialize_postgres_schema,
+)
+from password_reset import create_password_reset_blueprint
+
 ROOT = Path(__file__).resolve().parent
 app = Flask(__name__)
 secret_key = os.getenv('SECRET_KEY')
 if not secret_key:
     if os.getenv('VERCEL'):
-        secret_key = secrets.token_urlsafe(48)
-        app.logger.warning(
-            'SECRET_KEY is not configured; sessions will not persist across function instances. '
-            'Set SECRET_KEY in the Vercel environment.'
+        raise RuntimeError(
+            'SECRET_KEY must be configured in the Vercel environment. '
+            'Generate a stable key with: py -c "import secrets; print(secrets.token_urlsafe(48))"'
         )
     else:
         secret_key = 'local-dev-change-this-secret'
@@ -29,10 +37,14 @@ app.config['SESSION_COOKIE_SECURE'] = os.getenv(
     '1' if os.getenv('VERCEL') else '0',
 ) == '1'
 
-# Trên Vercel chỉ dùng SQLite tạm thời để kiểm thử.
-# Trên máy tính vẫn dùng freshfruit.db như cũ.
-if os.getenv("VERCEL"):
+# SQLite remains the local default. Vercel can use a shared PostgreSQL database.
+if DATABASE_URL:
+    DB_PATH = None
+elif os.getenv("VERCEL"):
     DB_PATH = "/tmp/freshfruit.db"
+    app.logger.warning(
+        'DATABASE_URL is not configured; Vercel is using temporary SQLite storage.'
+    )
 else:
     DB_PATH = os.getenv(
         "DATABASE_PATH",
@@ -57,9 +69,12 @@ PRODUCTS = [
 
 def db():
     if 'db' not in g:
-        g.db = sqlite3.connect(DB_PATH, timeout=15)
-        g.db.row_factory = sqlite3.Row
-        g.db.execute('PRAGMA foreign_keys=ON')
+        if DATABASE_URL:
+            g.db = connect_postgres(DATABASE_URL)
+        else:
+            g.db = sqlite3.connect(DB_PATH, timeout=15)
+            g.db.row_factory = sqlite3.Row
+            g.db.execute('PRAGMA foreign_keys=ON')
     return g.db
 
 app.register_blueprint(create_password_reset_blueprint(db))
@@ -70,6 +85,27 @@ def close_db(exc):
     if conn: conn.close()
 
 def init_db():
+    if DATABASE_URL:
+        conn = connect_postgres(DATABASE_URL)
+        try:
+            initialize_postgres_schema(conn)
+            if not conn.execute('SELECT 1 FROM products LIMIT 1').fetchone():
+                for product in PRODUCTS:
+                    conn.execute(
+                        'INSERT INTO products(name, category, price, unit, description, emoji, image, stock) '
+                        'VALUES(?,?,?,?,?,?,?,?)',
+                        product,
+                    )
+            conn.execute("INSERT OR IGNORE INTO coupons(code, discount_percent) VALUES('FRESH10', 10)")
+            seed_admin(conn)
+            conn.commit()
+        except Exception:
+            conn.rollback()
+            raise
+        finally:
+            conn.close()
+        return
+
     Path(DB_PATH).parent.mkdir(parents=True, exist_ok=True)
     conn = sqlite3.connect(DB_PATH)
     conn.executescript('''
@@ -302,7 +338,8 @@ def register():
                 session.update(user_id=cursor.lastrowid, email=email, name=name, role='customer', csrf=os.urandom(24).hex())
                 flash('Đăng ký thành công!', 'success')
                 return redirect(url_for('home'))
-            except sqlite3.IntegrityError:
+            except DB_INTEGRITY_ERROR_TYPES:
+                db().rollback()
                 flash('Email đã tồn tại.', 'danger')
     return render_template('auth.html', mode='register')
 
@@ -388,8 +425,10 @@ def checkout():
         else:
             conn = db()
             try:
-                conn.execute('BEGIN IMMEDIATE')
-                latest = conn.execute('SELECT c.quantity, p.id, p.name, p.price, p.stock, p.active FROM cart_items c JOIN products p ON c.product_id=p.id WHERE c.user_id=?', (session['user_id'],)).fetchall()
+                if not DATABASE_URL:
+                    conn.execute('BEGIN IMMEDIATE')
+                lock_clause = ' FOR UPDATE OF p' if DATABASE_URL else ''
+                latest = conn.execute('SELECT c.quantity, p.id, p.name, p.price, p.stock, p.active FROM cart_items c JOIN products p ON c.product_id=p.id WHERE c.user_id=?' + lock_clause, (session['user_id'],)).fetchall()
                 if not latest or any(not r['active'] or r['quantity'] > r['stock'] for r in latest):
                     raise ValueError('Sản phẩm đã hết hàng hoặc không đủ số lượng.')
                 subtotal = sum(r['quantity'] * r['price'] for r in latest)
@@ -405,7 +444,7 @@ def checkout():
                 conn.execute('DELETE FROM cart_items WHERE user_id=?', (session['user_id'],))
                 conn.commit()
                 return redirect(url_for('order_detail', oid=oid))
-            except (ValueError, sqlite3.Error) as exc:
+            except (ValueError, *DB_ERROR_TYPES) as exc:
                 conn.rollback()
                 flash(str(exc), 'danger')
     return render_template('checkout.html', rows=rows, total=total, user=user)
@@ -458,7 +497,8 @@ def admin_product():
             db().execute('INSERT INTO products(name, category, price, unit, description, emoji, image, stock) VALUES(?,?,?,?,?,?,?,?)', (name, category, price, unit, description, emoji, image, stock))
         db().commit()
         flash('Đã lưu sản phẩm thành công.', 'success')
-    except (ValueError, KeyError, sqlite3.Error):
+    except (ValueError, KeyError, *DB_ERROR_TYPES):
+        db().rollback()
         flash('Không thể lưu sản phẩm. Vui lòng kiểm tra lại thông tin.', 'danger')
     return redirect(url_for('admin'))
 
