@@ -73,13 +73,45 @@ git push -u origin main
 
 Thay `USERNAME` bằng tên tài khoản GitHub. File `.env`, database và thư mục `.venv` đã được loại khỏi Git.
 
-## 6. Triển khai lên mạng Internet (quan trọng)
+## 6. Deploy Vercel với database dùng chung
 
-Mã nguồn đã có entrypoint Flask tại `api/index.py` và route rewrite trong `vercel.json`. Tuy nhiên, **không triển khai cấu hình SQLite này lên Vercel để bán hàng thật**: filesystem `/tmp` của function chỉ tạm thời, mỗi function instance có thể dùng database riêng và dữ liệu có thể mất sau khi instance/deploy thay đổi. Để tài khoản, phiên đăng nhập, giỏ hàng và đơn hàng hoạt động ổn định, chuyển sang PostgreSQL/MySQL dùng chung (ví dụ Neon/Supabase/Railway) trước khi deploy; hoặc chạy Flask + SQLite trên VPS có ổ đĩa bền vững và backup.
+Vercel cần PostgreSQL dùng chung để tài khoản, phiên làm việc, giỏ hàng, đơn hàng và dữ liệu quản trị được giữ lại qua các lần chạy. Ứng dụng giữ SQLite làm mặc định trên máy local; khi có `DATABASE_URL`, ứng dụng dùng PostgreSQL (Neon được hỗ trợ). Không dùng SQLite `/tmp` cho dữ liệu cần lưu bền trên Vercel.
 
-Để có admin ổn định cho bản demo Vercel khi chưa chuyển database, vào **Vercel → Project → Settings → Environment Variables**, đặt `SECRET_KEY` (chuỗi ngẫu nhiên bí mật dài), `ADMIN_EMAIL`, `ADMIN_PASSWORD` (tối thiểu 12 ký tự) và `ADMIN_NAME`; chọn môi trường Production (và Preview nếu cần), sau đó redeploy. Thiếu `SECRET_KEY` không làm ứng dụng sập nhưng ứng dụng sẽ tạo khóa tạm thời cho function hiện tại; phiên đăng nhập có thể mất khi request sang function instance khác. Thiếu hoặc cấu hình sai biến admin sẽ bỏ qua tạo admin và ghi cảnh báo vào log. Ứng dụng bootstrap admin vào SQLite tạm của từng instance; đăng nhập và phiên admin được đối chiếu bằng email thay vì phụ thuộc ID SQLite. Tuy vậy, cách này **không làm dữ liệu SQLite trở nên bền vững**: giỏ hàng, đơn hàng và tài khoản khách vẫn có thể mất/không đồng bộ cho tới khi dùng database chung. Không tạo mật khẩu admin mặc định trong source code.
+### Chuẩn bị Neon và chuyển dữ liệu local
 
-Trong môi trường thật: SECRET_KEY mạnh, COOKIE_SECURE=1 khi chạy HTTPS, cấu hình DB có backup, giới hạn tần suất đăng nhập/chatbot, email reset password, xác thực địa chỉ/số điện thoại, payment gateway và xử lý quy trình giao hàng.
+1. Tạo một project/database PostgreSQL trên Neon và lấy connection string trong **Dashboard → Connect**. Giữ URL riêng tư; không dán vào chat, GitHub hay ảnh chụp màn hình.
+2. Sao lưu file `freshfruit.db` trước khi chuyển. Lệnh migration không xóa hoặc sửa SQLite nguồn và chỉ ghi vào database PostgreSQL đích **đang trống**.
+3. Mở `.env` local và thêm `DATABASE_URL` bằng connection string Neon. Không commit `.env`.
+4. Chạy lệnh migration từ thư mục dự án:
+
+   ```powershell
+   .venv\Scripts\python.exe migrate_sqlite_to_postgres.py
+   ```
+
+   Lệnh báo số hàng đã chuyển theo bảng. Nếu database đích đã có dữ liệu, lệnh dừng mà không ghi/xóa dữ liệu; không trỏ đến database đang dùng thật.
+
+### Cấu hình và deploy Vercel
+
+1. Vào **Vercel → Project → Settings → Environment Variables** và đặt các biến cho **Production** (thêm Preview nếu cần):
+   - `DATABASE_URL`: cùng Neon connection string đã dùng để chuyển dữ liệu.
+   - `SECRET_KEY`: bắt buộc; khóa ngẫu nhiên dài, ổn định giữa các lần deploy và dùng chung cho Production/Preview tương ứng. Tạo local bằng `py -c "import secrets; print(secrets.token_urlsafe(48))"`. App sẽ không khởi động trên Vercel nếu thiếu khóa này, vì cookie phiên và CSRF token sẽ lỗi giữa các function instance.
+   - `ADMIN_EMAIL`, `ADMIN_PASSWORD` (ít nhất 12 ký tự), `ADMIN_NAME`.
+   - `COOKIE_SECURE=1`.
+   - `OPENAI_API_KEY` và `OPENAI_MODEL=gpt-4o-mini` nếu bật chatbot AI.
+2. Nếu dùng quên mật khẩu qua email, đặt thêm `APP_BASE_URL` bằng URL Production và các biến SMTP: `SMTP_HOST`, `SMTP_PORT`, `SMTP_USERNAME`, `SMTP_PASSWORD`, `MAIL_FROM`.
+3. Sau khi xác nhận biến đã lưu, redeploy Production từ nhánh `main`.
+
+Không gửi credential hoặc connection string cho người khác, và không commit chúng vào source code. Nếu `DATABASE_URL` chưa được cấu hình trên Vercel, app vẫn có thể chạy SQLite tạm thời để báo lỗi cấu hình trong log, nhưng dữ liệu đó không bền và không đồng bộ. PostgreSQL được khởi tạo schema tự động; tài khoản admin được tạo/cập nhật từ các biến `ADMIN_*`.
+
+### Kiểm tra sau deploy
+
+- Mở trang chủ và `/health`.
+- Đăng ký/đăng nhập, tải lại trang và kiểm tra phiên vẫn được giữ.
+- Thêm sản phẩm vào giỏ, tải lại giỏ, rồi đặt thử đơn COD.
+- Kiểm tra đơn hàng và cập nhật trạng thái trong `/admin`.
+- Chatbot dùng OpenAI khi key hợp lệ và project API còn hạn mức; nếu không, endpoint trả lời bằng bot dự phòng.
+
+Trong môi trường thật, bật backup PostgreSQL, giới hạn tần suất đăng nhập/chatbot, cấu hình email reset password, xác thực địa chỉ/số điện thoại, payment gateway và quy trình giao hàng. Bản này chưa tích hợp thanh toán online.
 
 ## 7. Giới hạn hiện tại
 

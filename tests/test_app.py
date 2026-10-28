@@ -14,6 +14,8 @@ from unittest.mock import patch
 
 from werkzeug.security import generate_password_hash
 
+from database import POSTGRES_SCHEMA, adapt_postgres_sql
+
 PROJECT_ROOT = Path(__file__).resolve().parents[1]
 TEST_DATA = tempfile.TemporaryDirectory()
 TEST_DATABASE = Path(TEST_DATA.name) / 'freshfruit-test.db'
@@ -69,6 +71,36 @@ class ApplicationFlowTests(unittest.TestCase):
             response = self.client.get(f'/static/images/{image}')
             self.assertEqual(response.status_code, 200)
             response.close()
+
+    def test_postgres_sql_adapter_preserves_application_query_features(self):
+        self.assertEqual(
+            adapt_postgres_sql('SELECT id FROM users WHERE email=?'),
+            'SELECT id FROM users WHERE email=%s',
+        )
+        self.assertEqual(
+            adapt_postgres_sql(
+                "INSERT OR IGNORE INTO coupons(code, discount_percent) VALUES('FRESH10', 10)"
+            ),
+            "INSERT INTO coupons(code, discount_percent) VALUES('FRESH10', 10) "
+            'ON CONFLICT DO NOTHING',
+        )
+        self.assertEqual(
+            adapt_postgres_sql(
+                'INSERT INTO users(name, email) VALUES(?,?)'
+            ),
+            'INSERT INTO users(name, email) VALUES(%s,%s) RETURNING id',
+        )
+        self.assertEqual(
+            adapt_postgres_sql(
+                'INSERT INTO cart_items(user_id, product_id, quantity) '
+                'VALUES(?,?,?) ON CONFLICT(user_id, product_id) '
+                'DO UPDATE SET quantity=quantity+excluded.quantity'
+            ),
+            'INSERT INTO cart_items(user_id, product_id, quantity) '
+            'VALUES(%s,%s,%s) ON CONFLICT(user_id, product_id) '
+            'DO UPDATE SET quantity=quantity+excluded.quantity RETURNING id',
+        )
+        self.assertTrue(any('CREATE TABLE IF NOT EXISTS orders' in sql for sql in POSTGRES_SCHEMA))
 
     def test_chat_widget_endpoint_and_empty_input_validation(self):
         token = self.csrf_token('/')
@@ -219,13 +251,14 @@ class ApplicationFlowTests(unittest.TestCase):
         self.assertEqual(admin['role'], 'admin')
         self.assertEqual(user_count, 1)
 
-    def test_vercel_import_does_not_crash_without_secret_key(self):
+    def test_vercel_requires_a_stable_secret_key(self):
         environment = os.environ.copy()
         environment.update(VERCEL='1', AUTO_INIT_DB='0')
         for key in ('SECRET_KEY', 'ADMIN_EMAIL', 'ADMIN_PASSWORD', 'ADMIN_NAME'):
             environment.pop(key, None)
+        environment['SECRET_KEY'] = ''
 
-        result = subprocess.run(
+        missing_key = subprocess.run(
             [
                 sys.executable,
                 '-c',
@@ -235,10 +268,26 @@ class ApplicationFlowTests(unittest.TestCase):
             env=environment,
             capture_output=True,
             text=True,
+        )
+
+        self.assertNotEqual(missing_key.returncode, 0)
+        self.assertIn('SECRET_KEY must be configured', missing_key.stderr)
+
+        environment['SECRET_KEY'] = 'stable-vercel-test-key'
+        configured_key = subprocess.run(
+            [
+                sys.executable,
+                '-c',
+                'import app; print(app.app.config["SECRET_KEY"])',
+            ],
+            cwd=PROJECT_ROOT,
+            env=environment,
+            capture_output=True,
+            text=True,
             check=True,
         )
 
-        self.assertIn('True', result.stdout)
+        self.assertIn('stable-vercel-test-key', configured_key.stdout)
 
     def test_missing_admin_environment_skips_bootstrap_without_crashing(self):
         with patch.dict(

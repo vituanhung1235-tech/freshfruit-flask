@@ -10,6 +10,8 @@ from urllib.parse import urljoin, urlsplit
 from flask import Blueprint, current_app, flash, redirect, render_template, request, url_for
 from werkzeug.security import generate_password_hash
 
+from database import DATABASE_URL
+
 
 def create_password_reset_blueprint(get_db):
     blueprint = Blueprint('password_reset', __name__)
@@ -19,23 +21,26 @@ def create_password_reset_blueprint(get_db):
             '''
             CREATE TABLE IF NOT EXISTS password_reset_tokens(
                 token_hash TEXT PRIMARY KEY,
-                user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE,
+                user_id BIGINT NOT NULL REFERENCES users(id) ON DELETE CASCADE,
                 expires_at TEXT NOT NULL,
                 created_at TEXT NOT NULL
             )
             '''
         )
 
-    def valid_token(token):
+    def valid_token(token, lock=False):
         token_hash = hashlib.sha256(token.encode('utf-8')).hexdigest()
         now = datetime.now(timezone.utc).isoformat(timespec='seconds')
-        return get_db().execute(
-            '''
+        query = '''
             SELECT tokens.user_id
             FROM password_reset_tokens AS tokens
             JOIN users ON users.id=tokens.user_id
             WHERE tokens.token_hash=? AND tokens.expires_at>? AND users.role='admin'
-            ''',
+        '''
+        if lock and DATABASE_URL:
+            query += ' FOR UPDATE OF tokens'
+        return get_db().execute(
+            query,
             (token_hash, now),
         ).fetchone()
 
@@ -133,12 +138,8 @@ def create_password_reset_blueprint(get_db):
     @blueprint.route('/reset-password/<token>', methods=['GET', 'POST'])
     def reset_password(token):
         ensure_token_table()
-        if request.method == 'POST':
-            get_db().execute('BEGIN IMMEDIATE')
-        reset = valid_token(token)
+        reset = valid_token(token, lock=request.method == 'POST')
         if not reset:
-            if request.method == 'POST':
-                get_db().rollback()
             return render_template('reset_password.html', invalid=True), 400
 
         if request.method == 'POST':
