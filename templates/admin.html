@@ -14,10 +14,10 @@
 	</div>
 	<section class="panel admin-section">
 		<h2>Thêm / sửa sản phẩm</h2>
-		<p class="muted">Để sửa, điền ID của sản phẩm hiện có. Bỏ trống ID để thêm mới.</p>
-		<form method="post" action="{{url_for('admin_product')}}" class="admin-form" enctype="multipart/form-data">
+		<p class="muted" id="product-form-mode">Đang ở chế độ thêm mới. Muốn sửa, bấm “Sửa” ở dòng sản phẩm tương ứng.</p>
+		<form method="post" action="{{url_for('admin_product')}}" class="admin-form" enctype="multipart/form-data" id="product-form">
 			<input type="hidden" name="_csrf" value="{{csrf_token()}}">
-			<label>ID (để sửa)<input type="number" name="id" min="1"></label>
+			<input type="hidden" name="id" value="">
 			<label>Tên sản phẩm<input name="name" required></label>
 			<label>Danh mục<input name="category" required value="Việt Nam"></label>
 			<label>Giá VND<input name="price" type="number" min="0" required></label>
@@ -26,7 +26,8 @@
 			<label>Emoji<input name="emoji" value="🍎"></label>
 			<label>Ảnh sản phẩm (JPG, PNG, WebP; tối đa 1 MB)<input type="file" name="image" accept="image/jpeg,image/png,image/webp"></label>
 			<label style="grid-column: span 2;">Mô tả<input name="description" value="Hoa quả tươi ngon"></label>
-			<button class="cta">Lưu sản phẩm</button>
+			<button class="cta" id="product-submit">Thêm sản phẩm</button>
+			<button type="button" id="product-reset">Thêm sản phẩm mới</button>
 		</form>
 		<div class="tablewrap">
 			<table>
@@ -41,6 +42,7 @@
 						<td>{{p.stock}}</td>
 						<td>{{'Có' if p.active else 'Ẩn'}}</td>
 						<td>
+							<button type="button" data-edit-product data-id="{{p.id}}" data-name="{{p.name}}" data-category="{{p.category}}" data-price="{{p.price}}" data-unit="{{p.unit}}" data-stock="{{p.stock}}" data-emoji="{{p.emoji}}" data-description="{{p.description}}">Sửa</button>
 							<form method="post" action="{{url_for('admin_product_toggle',pid=p.id)}}">
 								<input type="hidden" name="_csrf" value="{{csrf_token()}}">
 								<button>{{'Ngừng bán' if p.active else 'Hiện lại'}}</button>
@@ -86,4 +88,32 @@
 		</div>
 	</section>
 </div>
+<script>
+(() => {
+	const form = document.getElementById('product-form');
+	const submit = document.getElementById('product-submit');
+	const mode = document.getElementById('product-form-mode');
+	const idField = form.elements.id;
+
+	document.querySelectorAll('[data-edit-product]').forEach((button) => {
+		button.addEventListener('click', () => {
+			idField.value = button.dataset.id;
+			for (const field of ['name', 'category', 'price', 'unit', 'stock', 'emoji', 'description']) {
+				form.elements[field].value = button.dataset[field] || '';
+			}
+			submit.textContent = 'Lưu thay đổi';
+			mode.textContent = `Đang sửa sản phẩm ID ${button.dataset.id}. Ảnh hiện tại được giữ nếu không chọn ảnh mới.`;
+			form.scrollIntoView({ behavior: 'smooth', block: 'center' });
+			form.elements.name.focus();
+		});
+	});
+
+	document.getElementById('product-reset').addEventListener('click', () => {
+		form.reset();
+		idField.value = '';
+		submit.textContent = 'Thêm sản phẩm';
+		mode.textContent = 'Đang ở chế độ thêm mới. Muốn sửa, bấm “Sửa” ở dòng sản phẩm tương ứng.';
+	});
+})();
+</script>
 {% endblock %}
