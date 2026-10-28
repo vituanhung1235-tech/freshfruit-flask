@@ -23,8 +23,10 @@ TABLE_ORDER = (
     'products',
     'coupons',
     'orders',
+    'pos_sales',
     'cart_items',
     'order_items',
+    'pos_sale_items',
     'reviews',
     'password_reset_tokens',
 )

@@ -1,0 +1,36 @@
+{% extends 'base.html' %}
+{% block title %}Nhân sự & phân quyền{% endblock %}
+{% block content %}
+<div class="container staff-workspace">
+  <div class="page-head">
+    <span class="eyebrow">QUẢN TRỊ · NHÂN SỰ</span>
+    <h1>Nhân sự & phân quyền</h1>
+    <p class="section-sub">Chỉ admin được tạo tài khoản và phân vai trò. Mỗi nhân viên chỉ được phép thao tác trong phạm vi công việc.</p>
+  </div>
+  <div class="staff-role-grid">
+    <article class="panel"><span class="eyebrow">01 · ĐIỀU PHỐI</span><h2>Quản lý</h2><p>Quản lý sản phẩm, giá, tồn kho; xác nhận đơn online; theo dõi doanh thu và điều phối vận hành.</p></article>
+    <article class="panel"><span class="eyebrow">02 · BÁN HÀNG</span><h2>Thu ngân</h2><p>Tạo phiếu bán tại quầy, thu tiền mặt/chuyển khoản. Hệ thống tự tính tổng, lưu người bán và trừ tồn.</p></article>
+    <article class="panel"><span class="eyebrow">03 · XỬ LÝ ĐƠN</span><h2>Đóng gói</h2><p>Chỉ xem đơn đã được xác nhận; nhận thông tin giao hàng, đóng gói và chuyển đơn theo từng bước.</p></article>
+  </div>
+  <section class="panel admin-section">
+    <h2>Tạo hoặc cập nhật nhân viên</h2>
+    <form method="post" class="staff-form">
+      <input type="hidden" name="_csrf" value="{{csrf_token()}}">
+      <label>Họ tên<input name="name" required minlength="2" autocomplete="name"></label>
+      <label>Email đăng nhập<input name="email" type="email" required autocomplete="email"></label>
+      <label>Mật khẩu tạm thời<input name="password" type="password" required minlength="12" autocomplete="new-password"></label>
+      <label>Vai trò<select name="role" required><option value="manager">Quản lý</option><option value="cashier">Thu ngân</option><option value="packer">Nhân viên đóng gói</option></select></label>
+      <button class="cta">Lưu tài khoản</button>
+    </form>
+    <p class="muted">Mật khẩu cần tối thiểu 12 ký tự. Nếu email đã thuộc nhân viên, biểu mẫu sẽ cập nhật vai trò và đặt lại mật khẩu.</p>
+  </section>
+  <section class="panel admin-section">
+    <h2>Tài khoản nhân viên</h2>
+    <div class="tablewrap"><table><thead><tr><th>Nhân viên</th><th>Email</th><th>Vai trò</th></tr></thead><tbody>
+      {% for person in staff %}
+      <tr><td>{{person.name}}</td><td>{{person.email}}</td><td>{{{'manager':'Quản lý','cashier':'Thu ngân','packer':'Đóng gói'}.get(person.role, person.role)}}</td></tr>
+      {% else %}<tr><td colspan="3">Chưa có tài khoản nhân viên.</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+</div>
+{% endblock %}

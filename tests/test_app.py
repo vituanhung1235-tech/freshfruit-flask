@@ -635,6 +635,151 @@ class ApplicationFlowTests(unittest.TestCase):
             ).fetchone()
         self.assertIsNone(product)
 
+    def test_cashier_pos_sale_calculates_total_and_deducts_stock(self):
+        with app_module.app.app_context():
+            cashier_id = app_module.db().execute(
+                'INSERT INTO users(name,email,password_hash,role) VALUES(?,?,?,?)',
+                ('Test Cashier', 'cashier@example.com', generate_password_hash('cashier-password'), 'cashier'),
+            ).lastrowid
+            initial_stock = app_module.db().execute(
+                'SELECT stock,price FROM products WHERE id=1'
+            ).fetchone()
+            app_module.db().commit()
+
+        with self.client.session_transaction() as session:
+            session.update(user_id=cashier_id, email='cashier@example.com')
+        self.assertEqual(self.client.get('/staff/pos').status_code, 200)
+        token = self.csrf_token('/staff/pos')
+        response = self.client.post(
+            '/staff/pos',
+            data={
+                '_csrf': token,
+                'product_id': ['1', '1'],
+                'quantity': ['1', '2'],
+                'payment_method': 'Tiền mặt',
+            },
+        )
+
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('sale=', response.headers['Location'])
+        with app_module.app.app_context():
+            sale = app_module.db().execute(
+                'SELECT id,total,payment_method FROM pos_sales WHERE cashier_user_id=?',
+                (cashier_id,),
+            ).fetchone()
+            item = app_module.db().execute(
+                'SELECT quantity,unit_price FROM pos_sale_items WHERE sale_id=?',
+                (sale['id'],),
+            ).fetchone()
+            final_stock = app_module.db().execute(
+                'SELECT stock FROM products WHERE id=1'
+            ).fetchone()['stock']
+        self.assertEqual(sale['total'], initial_stock['price'] * 3)
+        self.assertEqual(sale['payment_method'], 'Tiền mặt')
+        self.assertEqual(item['quantity'], 3)
+        self.assertEqual(final_stock, initial_stock['stock'] - 3)
+
+    def test_staff_roles_have_separate_workspaces(self):
+        role_users = {}
+        with app_module.app.app_context():
+            for role in ('manager', 'cashier', 'packer'):
+                role_users[role] = app_module.db().execute(
+                    'INSERT INTO users(name,email,password_hash,role) VALUES(?,?,?,?)',
+                    (role.title(), f'{role}@example.com', generate_password_hash('staff-password'), role),
+                ).lastrowid
+            app_module.db().commit()
+
+        expected = {
+            'manager': {'/admin': 200, '/admin/staff': 403, '/staff/pos': 200, '/staff/packing': 200},
+            'cashier': {'/admin': 403, '/admin/staff': 403, '/staff/pos': 200, '/staff/packing': 403},
+            'packer': {'/admin': 403, '/admin/staff': 403, '/staff/pos': 403, '/staff/packing': 200},
+        }
+        for role, checks in expected.items():
+            with self.client.session_transaction() as session:
+                session.clear()
+                session.update(user_id=role_users[role], email=f'{role}@example.com')
+            for path, status in checks.items():
+                self.assertEqual(self.client.get(path).status_code, status, f'{role} -> {path}')
+
+    def test_admin_can_create_staff_with_role(self):
+        admin_id = self.create_admin()
+        with self.client.session_transaction() as session:
+            session.update(user_id=admin_id, email='admin@example.com')
+        token = self.csrf_token('/admin/staff')
+        response = self.client.post(
+            '/admin/staff',
+            data={
+                '_csrf': token,
+                'name': 'Packing Staff',
+                'email': 'packing@example.com',
+                'password': 'long-staff-password',
+                'role': 'packer',
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        with app_module.app.app_context():
+            staff = app_module.db().execute(
+                'SELECT role,password_hash FROM users WHERE email=?',
+                ('packing@example.com',),
+            ).fetchone()
+        self.assertEqual(staff['role'], 'packer')
+        self.assertNotEqual(staff['password_hash'], 'long-staff-password')
+
+    def test_confirmed_online_orders_move_through_packing_stages(self):
+        manager_id = self.create_admin()
+        with app_module.app.app_context():
+            customer_id = app_module.db().execute(
+                'INSERT INTO users(name,email,password_hash) VALUES(?,?,?)',
+                ('Order Customer', 'order-customer@example.com', 'unused'),
+            ).lastrowid
+            packer_id = app_module.db().execute(
+                'INSERT INTO users(name,email,password_hash,role) VALUES(?,?,?,?)',
+                ('Order Packer', 'order-packer@example.com', 'unused', 'packer'),
+            ).lastrowid
+            order_id = app_module.db().execute(
+                'INSERT INTO orders(user_id,recipient,phone,address,total,created_at) VALUES(?,?,?,?,?,?)',
+                (customer_id, 'Order Customer', '0123456789', 'Test address', 89000, '2026-10-28T10:00:00'),
+            ).lastrowid
+            app_module.db().execute(
+                'INSERT INTO order_items(order_id,product_id,product_name,unit_price,quantity) VALUES(?,?,?,?,?)',
+                (order_id, 1, 'Táo Fuji Nhật Bản', 89000, 1),
+            )
+            app_module.db().commit()
+
+        with self.client.session_transaction() as session:
+            session.update(user_id=manager_id, email='admin@example.com')
+        token = self.csrf_token('/admin')
+        confirmed = self.client.post(
+            f'/admin/order/{order_id}/status',
+            data={'_csrf': token, 'status': 'Đã xác nhận'},
+        )
+        self.assertEqual(confirmed.status_code, 302)
+
+        with self.client.session_transaction() as session:
+            session.update(user_id=packer_id, email='order-packer@example.com')
+        queue = self.client.get('/staff/packing')
+        self.assertEqual(queue.status_code, 200)
+        self.assertIn(f'DH-{order_id:06d}', queue.get_data(as_text=True))
+
+        token = self.csrf_token('/staff/packing')
+        skipped = self.client.post(
+            f'/staff/packing/{order_id}/status',
+            data={'_csrf': token, 'status': 'Sẵn sàng giao'},
+        )
+        self.assertEqual(skipped.status_code, 400)
+        for status in ('Đang đóng gói', 'Sẵn sàng giao', 'Đang giao'):
+            token = self.csrf_token('/staff/packing')
+            response = self.client.post(
+                f'/staff/packing/{order_id}/status',
+                data={'_csrf': token, 'status': status},
+            )
+            self.assertEqual(response.status_code, 302)
+        with app_module.app.app_context():
+            final_status = app_module.db().execute(
+                'SELECT status FROM orders WHERE id=?', (order_id,)
+            ).fetchone()['status']
+        self.assertEqual(final_status, 'Đang giao')
+
     def create_admin(self, email='admin@example.com'):
         with app_module.app.app_context():
             cursor = app_module.db().execute(

@@ -1,0 +1,97 @@
+{% extends 'base.html' %}
+{% block title %}Bán tại quầy{% endblock %}
+{% block content %}
+<div class="container staff-workspace">
+  <div class="page-head">
+    <span class="eyebrow">ĐIỂM BÁN HÀNG · POS</span>
+    <h1>Ghi nhận đơn tại quầy</h1>
+    <p class="section-sub">Chọn mặt hàng và số lượng. Giá, tổng tiền và tồn kho được hệ thống kiểm tra tự động.</p>
+  </div>
+
+  {% if sale %}
+  <section class="panel sale-receipt" aria-live="polite">
+    <div><span class="eyebrow">ĐÃ GHI NHẬN</span><h2>Phiếu QT-{{'%06d'|format(sale.id)}}</h2></div>
+    <strong class="sale-total">{{money(sale.total)}}</strong>
+    <p>{{sale.created_at[:16]}} · {{sale.payment_method}}</p>
+    <div class="tablewrap"><table><thead><tr><th>Mặt hàng</th><th>Số lượng</th><th>Đơn giá</th><th>Thành tiền</th></tr></thead><tbody>
+      {% for item in sale_items %}<tr><td>{{item.product_name}}</td><td>{{item.quantity}}</td><td>{{money(item.unit_price)}}</td><td>{{money(item.unit_price * item.quantity)}}</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+  {% endif %}
+
+  <section class="panel pos-panel">
+    <div class="section-heading"><div><span class="eyebrow">ĐƠN BÁN LẺ</span><h2>Chọn sản phẩm</h2></div><button type="button" class="secondary-button" id="add-pos-line">＋ Thêm dòng hàng</button></div>
+    {% if products %}
+    <form method="post" action="{{url_for('point_of_sale')}}" id="pos-form" class="pos-form">
+      <input type="hidden" name="_csrf" value="{{csrf_token()}}">
+      <div class="tablewrap">
+        <table class="pos-table">
+          <thead><tr><th>Sản phẩm</th><th>Đơn giá</th><th>Tồn kho</th><th>Số lượng</th><th>Thành tiền</th><th></th></tr></thead>
+          <tbody id="pos-lines"></tbody>
+        </table>
+      </div>
+      <div class="pos-footer">
+        <label>Thanh toán<select name="payment_method"><option>Tiền mặt</option><option>Chuyển khoản</option></select></label>
+        <div class="pos-total-wrap"><span>Tổng cần thu</span><strong id="pos-grand-total">0đ</strong></div>
+      </div>
+      <button class="cta" type="submit">Xác nhận bán tại quầy</button>
+    </form>
+    {% else %}
+      <div class="empty"><h2>Chưa có hàng để bán</h2><p>Kiểm tra sản phẩm đang bán và tồn kho.</p></div>
+    {% endif %}
+  </section>
+
+  <template id="pos-line-template">
+    <tr class="pos-line">
+      <td><select name="product_id" required aria-label="Sản phẩm"><option value="">Chọn sản phẩm</option>{% for product in products %}<option value="{{product.id}}" data-price="{{product.price}}" data-stock="{{product.stock}}">{{product.name}} · {{money(product.price)}}/{{product.unit}}</option>{% endfor %}</select></td>
+      <td data-line-price>—</td><td data-line-stock>—</td>
+      <td><input name="quantity" type="number" min="1" max="999" value="1" required aria-label="Số lượng"></td>
+      <td data-line-total>0đ</td><td><button type="button" class="remove-pos-line" aria-label="Bỏ dòng hàng">×</button></td>
+    </tr>
+  </template>
+</div>
+<script>
+(() => {
+  const form = document.getElementById('pos-form');
+  if (!form) return;
+  const lines = document.getElementById('pos-lines');
+  const template = document.getElementById('pos-line-template');
+  const totalNode = document.getElementById('pos-grand-total');
+  const money = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
+
+  function recalculate() {
+    let total = 0;
+    for (const row of lines.querySelectorAll('.pos-line')) {
+      const select = row.querySelector('[name="product_id"]');
+      const quantity = row.querySelector('[name="quantity"]');
+      const option = select.selectedOptions[0];
+      const price = Number(option.dataset.price || 0);
+      const stock = Number(option.dataset.stock || 0);
+      const count = Math.max(0, Number(quantity.value || 0));
+      const lineTotal = price * count;
+      total += lineTotal;
+      row.querySelector('[data-line-price]').textContent = price ? money.format(price) + 'đ' : '—';
+      row.querySelector('[data-line-stock]').textContent = option.value ? stock : '—';
+      row.querySelector('[data-line-total]').textContent = lineTotal ? money.format(lineTotal) + 'đ' : '0đ';
+      quantity.max = stock || 999;
+    }
+    totalNode.textContent = money.format(total) + 'đ';
+  }
+
+  function addLine() {
+    lines.append(template.content.cloneNode(true));
+    recalculate();
+  }
+
+  document.getElementById('add-pos-line').addEventListener('click', addLine);
+  lines.addEventListener('input', recalculate);
+  lines.addEventListener('change', recalculate);
+  lines.addEventListener('click', (event) => {
+    if (!event.target.closest('.remove-pos-line')) return;
+    if (lines.querySelectorAll('.pos-line').length > 1) event.target.closest('tr').remove();
+    recalculate();
+  });
+  addLine();
+})();
+</script>
+{% endblock %}

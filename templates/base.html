@@ -71,6 +71,15 @@
               {% if is_admin %}
                 <a href="{{url_for('admin')}}" class="admin-link">👑 Quản trị hệ thống</a>
               {% endif %}
+              {% if user_role == 'admin' %}
+                <a href="{{url_for('staff_management')}}">👥 Nhân sự & phân quyền</a>
+              {% endif %}
+              {% if user_role in ['admin', 'manager', 'cashier'] %}
+                <a href="{{url_for('point_of_sale')}}">🧾 Bán tại quầy</a>
+              {% endif %}
+              {% if user_role in ['admin', 'manager', 'packer'] %}
+                <a href="{{url_for('packing_queue')}}">📦 Hàng đợi đóng gói</a>
+              {% endif %}
               <form method="post" action="{{url_for('logout')}}" class="logout-form">
                 <input type="hidden" name="_csrf" value="{{csrf_token()}}">
                 <button type="submit" class="logout-btn">Đăng xuất</button>

@@ -158,6 +158,8 @@ def init_db():
     CREATE TABLE IF NOT EXISTS cart_items(id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, product_id INTEGER NOT NULL REFERENCES products(id), quantity INTEGER NOT NULL CHECK(quantity>0), UNIQUE(user_id, product_id));
     CREATE TABLE IF NOT EXISTS orders(id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), recipient TEXT NOT NULL, phone TEXT NOT NULL, address TEXT NOT NULL, note TEXT DEFAULT '', total INTEGER NOT NULL, status TEXT NOT NULL DEFAULT 'Chờ xác nhận', payment_method TEXT NOT NULL DEFAULT 'COD', created_at TEXT NOT NULL);
     CREATE TABLE IF NOT EXISTS order_items(id INTEGER PRIMARY KEY, order_id INTEGER NOT NULL REFERENCES orders(id), product_id INTEGER NOT NULL REFERENCES products(id), product_name TEXT NOT NULL, unit_price INTEGER NOT NULL, quantity INTEGER NOT NULL);
+    CREATE TABLE IF NOT EXISTS pos_sales(id INTEGER PRIMARY KEY, cashier_user_id INTEGER NOT NULL REFERENCES users(id), total INTEGER NOT NULL CHECK(total>=0), payment_method TEXT NOT NULL DEFAULT 'Tiền mặt', created_at TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS pos_sale_items(id INTEGER PRIMARY KEY, sale_id INTEGER NOT NULL REFERENCES pos_sales(id) ON DELETE CASCADE, product_id INTEGER NOT NULL REFERENCES products(id), product_name TEXT NOT NULL, unit_price INTEGER NOT NULL, quantity INTEGER NOT NULL CHECK(quantity>0));
     CREATE TABLE IF NOT EXISTS reviews(id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), product_id INTEGER NOT NULL REFERENCES products(id), stars INTEGER NOT NULL CHECK(stars BETWEEN 1 AND 5), content TEXT NOT NULL, created_at TEXT NOT NULL, UNIQUE(user_id, product_id));
     CREATE TABLE IF NOT EXISTS coupons(code TEXT PRIMARY KEY, discount_percent INTEGER NOT NULL, active INTEGER NOT NULL DEFAULT 1);
     CREATE TABLE IF NOT EXISTS password_reset_tokens(token_hash TEXT PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, expires_at TEXT NOT NULL, created_at TEXT NOT NULL);
@@ -235,7 +237,8 @@ def inject():
     return {
         'cart_count': count,
         'current_user': session.get('name'),
-        'is_admin': session.get('role') == 'admin',
+        'user_role': session.get('role', 'customer'),
+        'is_admin': session.get('role') in ('admin', 'manager'),
         'product_image_src': lambda product: (
             url_for('uploaded_product_image', pid=product['id'])
             if (product['image'] or '').startswith('data:image/')
@@ -296,13 +299,32 @@ def login_required(fn):
         return fn(*args, **kwargs)
     return wrapped
 
-def admin_required(fn):
-    @wraps(fn)
-    @login_required
-    def wrapped(*args, **kwargs):
-        if session.get('role') != 'admin': abort(403)
-        return fn(*args, **kwargs)
-    return wrapped
+def roles_required(*allowed_roles):
+    def decorator(fn):
+        @wraps(fn)
+        @login_required
+        def wrapped(*args, **kwargs):
+            if session.get('role') not in allowed_roles:
+                abort(403)
+            return fn(*args, **kwargs)
+        return wrapped
+    return decorator
+
+
+admin_required = roles_required('admin', 'manager')
+system_admin_required = roles_required('admin')
+cashier_required = roles_required('admin', 'manager', 'cashier')
+packer_required = roles_required('admin', 'manager', 'packer')
+
+ORDER_TRANSITIONS = {
+    'Chờ xác nhận': ('Đã xác nhận', 'Đã hủy'),
+    'Đã xác nhận': ('Đang đóng gói', 'Đã hủy'),
+    'Đang đóng gói': ('Sẵn sàng giao', 'Đã hủy'),
+    'Sẵn sàng giao': ('Đang giao', 'Đã hủy'),
+    'Đang giao': ('Đã giao', 'Đã hủy'),
+    'Đã giao': (),
+    'Đã hủy': (),
+}
 
 @app.get('/')
 def home():
@@ -420,7 +442,13 @@ def login():
         if user and check_password_hash(user['password_hash'], password):
             session.clear()
             session.update(user_id=user['id'], email=user['email'], name=user['name'], role=user['role'], csrf=os.urandom(24).hex())
-            return redirect(url_for('admin') if user['role'] == 'admin' else url_for('home'))
+            destination = {
+                'admin': 'admin',
+                'manager': 'admin',
+                'cashier': 'point_of_sale',
+                'packer': 'packing_queue',
+            }.get(user['role'], 'home')
+            return redirect(url_for(destination))
         flash('Email hoặc mật khẩu không chính xác.', 'danger')
     return render_template('auth.html', mode='login')
 
@@ -526,7 +554,7 @@ def orders():
 @app.get('/orders/<int:oid>')
 @login_required
 def order_detail(oid):
-    order = db().execute('SELECT * FROM orders WHERE id=? AND (user_id=? OR ?=\'admin\')', (oid, session['user_id'], session.get('role'))).fetchone()
+    order = db().execute('SELECT * FROM orders WHERE id=? AND (user_id=? OR ? IN (\'admin\',\'manager\'))', (oid, session['user_id'], session.get('role'))).fetchone()
     if not order: abort(404)
     items = db().execute('SELECT * FROM order_items WHERE order_id=?', (oid,)).fetchall()
     return render_template('order_detail.html', order=order, items=items)
@@ -538,11 +566,25 @@ def admin():
         'users': db().execute('SELECT COUNT(*) FROM users').fetchone()[0],
         'products': db().execute('SELECT COUNT(*) FROM products').fetchone()[0],
         'orders': db().execute('SELECT COUNT(*) FROM orders').fetchone()[0],
-        'revenue': db().execute("SELECT COALESCE(SUM(total),0) FROM orders WHERE status='Đã giao'").fetchone()[0]
+        'online_value': db().execute("SELECT COALESCE(SUM(total),0) FROM orders WHERE status!='Đã hủy'").fetchone()[0],
+        'revenue': db().execute("SELECT COALESCE(SUM(total),0) FROM orders WHERE status='Đã giao'").fetchone()[0],
+        'pos_sales': db().execute('SELECT COUNT(*) FROM pos_sales').fetchone()[0],
+        'pos_revenue': db().execute('SELECT COALESCE(SUM(total),0) FROM pos_sales').fetchone()[0],
     }
     products = db().execute('SELECT * FROM products ORDER BY id DESC').fetchall()
     orders = db().execute('SELECT o.*, u.email FROM orders o JOIN users u ON o.user_id=u.id ORDER BY o.id DESC LIMIT 60').fetchall()
-    return render_template('admin.html', stats=stats, products=products, orders=orders, statuses=['Chờ xác nhận', 'Đã xác nhận', 'Đang giao', 'Đã giao', 'Đã hủy'])
+    pos_receipts = db().execute(
+        'SELECT s.id,s.total,s.payment_method,s.created_at,u.name AS cashier_name '
+        'FROM pos_sales s JOIN users u ON u.id=s.cashier_user_id ORDER BY s.id DESC LIMIT 30'
+    ).fetchall()
+    return render_template(
+        'admin.html',
+        stats=stats,
+        products=products,
+        orders=orders,
+        pos_receipts=pos_receipts,
+        order_transitions=ORDER_TRANSITIONS,
+    )
 
 @app.post('/admin/product')
 @admin_required
@@ -616,7 +658,7 @@ def admin_product_delete(pid):
             f'SELECT 1 FROM {table} WHERE product_id=? LIMIT 1',
             (pid,),
         ).fetchone()
-        for table in ('cart_items', 'order_items', 'reviews')
+        for table in ('cart_items', 'order_items', 'pos_sale_items', 'reviews')
     )
     if references:
         db().execute('UPDATE products SET active=0 WHERE id=?', (pid,))
@@ -638,21 +680,178 @@ def admin_product_delete(pid):
 @admin_required
 def admin_order_status(oid):
     status = request.form.get('status')
-    allowed = ['Chờ xác nhận', 'Đã xác nhận', 'Đang giao', 'Đã giao', 'Đã hủy']
-    if status not in allowed: abort(400)
     row = db().execute('SELECT status FROM orders WHERE id=?', (oid,)).fetchone()
     if not row: abort(404)
-    if row['status'] == 'Đã hủy' and status != 'Đã hủy':
-        flash('Không thể mở lại đơn đã hủy.', 'danger')
-    elif row['status'] == 'Đã giao' and status != 'Đã giao':
-        flash('Không thể đổi trạng thái đơn đã giao.', 'danger')
-    else:
-        if status == 'Đã hủy' and row['status'] != 'Đã hủy':
-            for item in db().execute('SELECT product_id, quantity FROM order_items WHERE order_id=?', (oid,)).fetchall():
-                db().execute('UPDATE products SET stock=stock+? WHERE id=?', (item['quantity'], item['product_id']))
-        db().execute('UPDATE orders SET status=? WHERE id=?', (status, oid))
-        db().commit()
+    if status not in ORDER_TRANSITIONS.get(row['status'], ()):
+        abort(400)
+    if status == 'Đã hủy':
+        for item in db().execute('SELECT product_id, quantity FROM order_items WHERE order_id=?', (oid,)).fetchall():
+            db().execute('UPDATE products SET stock=stock+? WHERE id=?', (item['quantity'], item['product_id']))
+    db().execute('UPDATE orders SET status=? WHERE id=?', (status, oid))
+    db().commit()
     return redirect(url_for('admin'))
+
+
+@app.route('/admin/staff', methods=['GET', 'POST'])
+@system_admin_required
+def staff_management():
+    staff_roles = ('manager', 'cashier', 'packer')
+    if request.method == 'POST':
+        name = request.form.get('name', '').strip()[:100]
+        email = request.form.get('email', '').strip().lower()[:255]
+        password = request.form.get('password', '')
+        role = request.form.get('role', '')
+        if len(name) < 2 or not re.fullmatch(r'[^\s@]+@[^\s@]+\.[^\s@]+', email):
+            flash('Vui lòng nhập họ tên và email hợp lệ.', 'danger')
+        elif len(password) < 12:
+            flash('Mật khẩu nhân viên cần tối thiểu 12 ký tự.', 'danger')
+        elif role not in staff_roles:
+            flash('Vai trò không hợp lệ.', 'danger')
+        else:
+            existing = db().execute(
+                'SELECT id, role FROM users WHERE lower(email)=?', (email,)
+            ).fetchone()
+            if existing and existing['role'] == 'admin':
+                flash('Không thể thay đổi tài khoản quản trị hệ thống tại đây.', 'danger')
+            else:
+                try:
+                    password_hash = generate_password_hash(password)
+                    if existing:
+                        db().execute(
+                            'UPDATE users SET name=?, password_hash=?, role=? WHERE id=?',
+                            (name, password_hash, role, existing['id']),
+                        )
+                    else:
+                        db().execute(
+                            'INSERT INTO users(name,email,password_hash,role) VALUES(?,?,?,?)',
+                            (name, email, password_hash, role),
+                        )
+                    db().commit()
+                    flash('Đã tạo/cập nhật tài khoản nhân viên.', 'success')
+                    return redirect(url_for('staff_management'))
+                except DB_ERROR_TYPES:
+                    db().rollback()
+                    flash('Không thể lưu tài khoản nhân viên.', 'danger')
+
+    staff = db().execute(
+        "SELECT id,name,email,role FROM users WHERE role IN ('manager','cashier','packer') ORDER BY role,name"
+    ).fetchall()
+    return render_template('staff.html', staff=staff)
+
+
+@app.route('/staff/pos', methods=['GET', 'POST'])
+@cashier_required
+def point_of_sale():
+    products = db().execute(
+        'SELECT id,name,price,unit,stock FROM products WHERE active=1 AND stock>0 ORDER BY name'
+    ).fetchall()
+    sale = None
+    sale_items = []
+    sale_id = request.args.get('sale', type=int)
+    if sale_id:
+        sale = db().execute(
+            'SELECT * FROM pos_sales WHERE id=? AND (cashier_user_id=? OR ? IN (\'admin\',\'manager\'))',
+            (sale_id, session['user_id'], session.get('role')),
+        ).fetchone()
+        if sale:
+            sale_items = db().execute(
+                'SELECT * FROM pos_sale_items WHERE sale_id=? ORDER BY id', (sale_id,)
+            ).fetchall()
+
+    if request.method == 'POST':
+        product_ids = request.form.getlist('product_id')
+        quantities = request.form.getlist('quantity')
+        payment_method = request.form.get('payment_method', 'Tiền mặt')
+        try:
+            if not product_ids or len(product_ids) != len(quantities) or len(product_ids) > 30:
+                raise ValueError('Thêm ít nhất một dòng sản phẩm hợp lệ.')
+            if payment_method not in ('Tiền mặt', 'Chuyển khoản'):
+                raise ValueError('Phương thức thanh toán không hợp lệ.')
+
+            requested = {}
+            for product_id, quantity in zip(product_ids, quantities):
+                product_id = int(product_id)
+                quantity = int(quantity)
+                if quantity < 1 or quantity > 999:
+                    raise ValueError('Số lượng mỗi dòng phải từ 1 đến 999.')
+                requested[product_id] = requested.get(product_id, 0) + quantity
+
+            conn = db()
+            if not DATABASE_URL:
+                conn.execute('BEGIN IMMEDIATE')
+            lock_clause = ' FOR UPDATE' if DATABASE_URL else ''
+            lines = []
+            for product_id, quantity in requested.items():
+                product = conn.execute(
+                    'SELECT id,name,price,unit,stock FROM products WHERE id=? AND active=1' + lock_clause,
+                    (product_id,),
+                ).fetchone()
+                if not product or product['stock'] < quantity:
+                    raise ValueError('Sản phẩm không còn bán hoặc tồn kho không đủ.')
+                lines.append((product, quantity))
+
+            total = sum(product['price'] * quantity for product, quantity in lines)
+            sale_cursor = conn.execute(
+                'INSERT INTO pos_sales(cashier_user_id,total,payment_method,created_at) VALUES(?,?,?,?)',
+                (session['user_id'], total, payment_method, datetime.now().isoformat(timespec='seconds')),
+            )
+            sale_id = sale_cursor.lastrowid
+            for product, quantity in lines:
+                conn.execute(
+                    'INSERT INTO pos_sale_items(sale_id,product_id,product_name,unit_price,quantity) VALUES(?,?,?,?,?)',
+                    (sale_id, product['id'], product['name'], product['price'], quantity),
+                )
+                conn.execute(
+                    'UPDATE products SET stock=stock-? WHERE id=?',
+                    (quantity, product['id']),
+                )
+            conn.commit()
+            flash(f'Đã ghi nhận bán tại quầy. Mã phiếu: QT-{sale_id:06d}.', 'success')
+            return redirect(url_for('point_of_sale', sale=sale_id))
+        except (ValueError, *DB_ERROR_TYPES) as error:
+            db().rollback()
+            flash(str(error) or 'Không thể ghi nhận phiếu bán.', 'danger')
+
+    return render_template('pos.html', products=products, sale=sale, sale_items=sale_items)
+
+
+@app.get('/staff/packing')
+@packer_required
+def packing_queue():
+    orders = [dict(row) for row in db().execute(
+        "SELECT o.*, u.name AS customer_name, u.email FROM orders o JOIN users u ON u.id=o.user_id "
+        "WHERE o.status IN ('Đã xác nhận','Đang đóng gói','Sẵn sàng giao') ORDER BY o.id"
+    ).fetchall()]
+    for order in orders:
+        order['items'] = db().execute(
+            'SELECT product_name,quantity,unit_price FROM order_items WHERE order_id=? ORDER BY id',
+            (order['id'],),
+        ).fetchall()
+        order['next_status'] = {
+            'Đã xác nhận': 'Đang đóng gói',
+            'Đang đóng gói': 'Sẵn sàng giao',
+            'Sẵn sàng giao': 'Đang giao',
+        }[order['status']]
+    return render_template('packing.html', orders=orders)
+
+
+@app.post('/staff/packing/<int:oid>/status')
+@packer_required
+def packing_update_status(oid):
+    order = db().execute('SELECT status FROM orders WHERE id=?', (oid,)).fetchone()
+    if not order:
+        abort(404)
+    expected_next = {
+        'Đã xác nhận': 'Đang đóng gói',
+        'Đang đóng gói': 'Sẵn sàng giao',
+        'Sẵn sàng giao': 'Đang giao',
+    }.get(order['status'])
+    if request.form.get('status') != expected_next:
+        abort(400)
+    db().execute('UPDATE orders SET status=? WHERE id=?', (expected_next, oid))
+    db().commit()
+    flash(f'Đơn DH-{oid:06d} đã chuyển sang “{expected_next}”.', 'success')
+    return redirect(url_for('packing_queue'))
 
 def get_smart_bot_reply(question: str, catalog: list) -> str:
     lower = question.lower().strip()

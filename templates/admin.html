@@ -10,8 +10,22 @@
 		<div><small>Khách hàng</small><h2>{{stats.users}}</h2></div>
 		<div><small>Sản phẩm</small><h2>{{stats.products}}</h2></div>
 		<div><small>Đơn hàng</small><h2>{{stats.orders}}</h2></div>
+		<div><small>Giá trị đơn online (trừ đơn hủy)</small><h2>{{money(stats.online_value)}}</h2></div>
 		<div><small>Doanh thu đơn đã giao</small><h2>{{money(stats.revenue)}}</h2></div>
+		<div><small>Doanh thu bán tại quầy</small><h2>{{money(stats.pos_revenue)}}</h2><small>{{stats.pos_sales}} phiếu bán</small></div>
 	</div>
+	<nav class="ops-links" aria-label="Công việc vận hành">
+		<a href="{{url_for('point_of_sale')}}">🧾 Bán tại quầy</a>
+		<a href="{{url_for('packing_queue')}}">📦 Hàng đợi đóng gói</a>
+		{% if user_role == 'admin' %}<a href="{{url_for('staff_management')}}">👥 Nhân sự & phân quyền</a>{% endif %}
+	</nav>
+	<section class="panel admin-section">
+		<div class="section-heading"><div><span class="eyebrow">KÊNH OFFLINE</span><h2>Phiếu bán tại quầy gần đây</h2></div><a href="{{url_for('point_of_sale')}}">Mở quầy bán →</a></div>
+		<div class="tablewrap"><table><thead><tr><th>Mã phiếu</th><th>Nhân viên</th><th>Thời gian</th><th>Thanh toán</th><th>Tổng thu</th></tr></thead><tbody>
+			{% for sale in pos_receipts %}<tr><td>QT-{{'%06d'|format(sale.id)}}</td><td>{{sale.cashier_name}}</td><td>{{sale.created_at[:16]}}</td><td>{{sale.payment_method}}</td><td>{{money(sale.total)}}</td></tr>
+			{% else %}<tr><td colspan="5">Chưa có phiếu bán tại quầy.</td></tr>{% endfor %}
+		</tbody></table></div>
+	</section>
 	<section class="panel admin-section">
 		<h2>Thêm / sửa sản phẩm</h2>
 		<p class="muted" id="product-form-mode">Đang ở chế độ thêm mới. Muốn sửa, bấm “Sửa” ở dòng sản phẩm tương ứng.</p>
@@ -66,7 +80,7 @@
 				<tbody>
 					{% for o in orders %}
 					<tr>
-						<td><a href="{{url_for('order_detail',oid=o.id)}}">#{{o.id}}</a></td>
+						<td><a href="{{url_for('order_detail',oid=o.id)}}">DH-{{'%06d'|format(o.id)}}</a></td>
 						<td>{{o.email}}</td>
 						<td>{{money(o.total)}}</td>
 						<td>{{o.status}}</td>
@@ -74,7 +88,8 @@
 							<form method="post" action="{{url_for('admin_order_status',oid=o.id)}}" class="status-form">
 								<input type="hidden" name="_csrf" value="{{csrf_token()}}">
 								<select name="status">
-									{% for s in statuses %}<option value="{{s}}" {{'selected' if s==o.status else ''}}>{{s}}</option>{% endfor %}
+									<option value="{{o.status}}" selected>{{o.status}}</option>
+									{% for s in order_transitions[o.status] %}<option value="{{s}}">{{s}}</option>{% endfor %}
 								</select>
 								<button>Lưu</button>
 							</form>

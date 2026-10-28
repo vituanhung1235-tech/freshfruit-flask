@@ -1,0 +1,41 @@
+{% extends 'base.html' %}
+{% block title %}Hàng đợi đóng gói{% endblock %}
+{% block content %}
+<div class="container staff-workspace">
+  <div class="page-head">
+    <span class="eyebrow">VẬN HÀNH · ĐÓNG GÓI</span>
+    <h1>Hàng đợi đơn online</h1>
+    <p class="section-sub">Đơn được chuyển tới đây sau khi quản lý xác nhận. Cập nhật lần lượt theo tiến độ đóng gói.</p>
+  </div>
+  {% if orders %}
+  <div class="packing-list">
+    {% for order in orders %}
+    <article class="panel packing-order">
+      <header class="packing-order-head">
+        <div><span class="eyebrow">MÃ ĐƠN</span><h2>DH-{{'%06d'|format(order.id)}}</h2></div>
+        <span class="order-state">{{order.status}}</span>
+      </header>
+      <div class="packing-contact">
+        <strong>{{order.recipient}}</strong><span>{{order.phone}}</span><span>{{order.address}}</span>
+      </div>
+      {% if order.note %}<p class="packing-note">Ghi chú: {{order.note}}</p>{% endif %}
+      <div class="tablewrap"><table><thead><tr><th>Sản phẩm</th><th>Số lượng</th><th>Đơn giá</th></tr></thead><tbody>
+        {% for item in order['items'] %}<tr><td>{{item.product_name}}</td><td>{{item.quantity}}</td><td>{{money(item.unit_price)}}</td></tr>{% endfor %}
+      </tbody></table></div>
+      <footer class="packing-order-foot">
+        <div><small>Ngày nhận đơn</small><strong>{{order.created_at[:16]}}</strong></div>
+        <div><small>Tổng COD</small><strong>{{money(order.total)}}</strong></div>
+        <form method="post" action="{{url_for('packing_update_status',oid=order.id)}}">
+          <input type="hidden" name="_csrf" value="{{csrf_token()}}">
+          <input type="hidden" name="status" value="{{order.next_status}}">
+          <button class="cta">{{order.next_status}}</button>
+        </form>
+      </footer>
+    </article>
+    {% endfor %}
+  </div>
+  {% else %}
+  <div class="empty"><h2>Chưa có đơn cần đóng gói</h2><p>Đơn sẽ xuất hiện ở đây khi quản lý xác nhận.</p></div>
+  {% endif %}
+</div>
+{% endblock %}
