@@ -931,6 +931,42 @@ class ApplicationFlowTests(unittest.TestCase):
         self.assertEqual(staff['role'], 'packer')
         self.assertNotEqual(staff['password_hash'], 'long-staff-password')
 
+    def test_admin_can_save_order_without_changing_its_status(self):
+        admin_id = self.create_admin()
+        with app_module.app.app_context():
+            customer_id = app_module.db().execute(
+                'INSERT INTO users(name,email,password_hash) VALUES(?,?,?)',
+                ('Order Customer', 'unchanged-order@example.com', 'unused'),
+            ).lastrowid
+            order_id = app_module.db().execute(
+                'INSERT INTO orders(user_id,recipient,phone,address,total,created_at) '
+                'VALUES(?,?,?,?,?,?)',
+                (
+                    customer_id,
+                    'Order Customer',
+                    '0123456789',
+                    'Test address',
+                    50000,
+                    '2026-11-03T10:00:00',
+                ),
+            ).lastrowid
+            app_module.db().commit()
+
+        with self.client.session_transaction() as session:
+            session.update(user_id=admin_id, email='admin@example.com')
+        token = self.csrf_token('/admin')
+        response = self.client.post(
+            f'/admin/order/{order_id}/status',
+            data={'_csrf': token, 'status': 'Chờ xác nhận'},
+        )
+
+        self.assertEqual(response.status_code, 302)
+        with app_module.app.app_context():
+            order = app_module.db().execute(
+                'SELECT status FROM orders WHERE id=?', (order_id,)
+            ).fetchone()
+        self.assertEqual(order['status'], 'Chờ xác nhận')
+
     def test_confirmed_online_orders_move_through_packing_stages(self):
         manager_id = self.create_admin()
         with app_module.app.app_context():

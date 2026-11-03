@@ -945,6 +945,9 @@ def admin_order_status(oid):
     status = request.form.get('status')
     row = db().execute('SELECT status FROM orders WHERE id=?', (oid,)).fetchone()
     if not row: abort(404)
+    if status == row['status']:
+        flash('Trạng thái đơn hàng không thay đổi.', 'info')
+        return redirect(url_for('admin'))
     if status not in ORDER_TRANSITIONS.get(row['status'], ()):
         abort(400)
     if status == 'Đã hủy':
