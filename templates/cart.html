@@ -2,7 +2,7 @@
 {% block title %}Giỏ hàng{% endblock %}
 {% block content %}
 <div class="container">
-	<div class="page-head" style="margin: 35px 0 20px;"><h1>🛒 Giỏ hàng của bạn</h1></div>
+	<div class="page-head" style="margin: 35px 0 20px;"><h1>Giỏ hàng của bạn</h1></div>
 	{% if rows %}
 	<div class="cart-layout">
 		<div class="panel">
@@ -10,8 +10,8 @@
 				<input type="hidden" name="_csrf" value="{{csrf_token()}}">
 				{% for p in rows %}
 				<div class="cart-row" data-unit-price="{{p.price}}">
-					<div class="cart-emoji">
-						{% if p.image %}<img src="{{product_image_src(p)}}" alt="{{p.name}}" class="cart-img" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block';"><span style="display:none;">{{p.emoji}}</span>{% else %}<span>{{p.emoji}}</span>{% endif %}
+					<div class="cart-product-image">
+						<img src="{{product_image_src(p)}}" alt="{{p.name}}" class="cart-img" onerror="this.onerror=null;this.src='/static/images/hero_fruits.jpg';">
 					</div>
 					<div class="cart-meta"><strong>{{p.name}}</strong><small>{{money(p.price)}} / {{p.unit}}</small></div>
 					<label class="cart-quantity-label"><span class="visually-hidden">Số lượng {{p.name}}</span><input type="number" name="quantity_{{p.id}}" value="{{p.quantity}}" min="0" max="{{p.stock}}" data-cart-quantity></label>
@@ -29,7 +29,7 @@
 		</aside>
 	</div>
 	{% else %}
-	<div class="empty">🛒<h2>Giỏ hàng của bạn đang trống</h2><a class="cta" href="{{url_for('products')}}">Mua sắm ngay</a></div>
+	<div class="empty"><h2>Giỏ hàng của bạn đang trống</h2><a class="cta" href="{{url_for('products')}}">Mua sắm ngay</a></div>
 	{% endif %}
 </div>
 {% endblock %}

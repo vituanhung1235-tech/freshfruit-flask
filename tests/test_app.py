@@ -98,10 +98,24 @@ class ApplicationFlowTests(unittest.TestCase):
 
         self.assertEqual(response.status_code, 200)
         self.assertTrue(any('Thanh long' in item['name'] for item in response.json))
+        self.assertTrue(all(item['image'].startswith('/static/images/') or '/image' in item['image'] for item in response.json))
+        self.assertTrue(all('emoji' not in item for item in response.json))
         lowercase_response = self.client.get('/api/product-suggestions?q=l')
         self.assertTrue(any('Thanh long' in item['name'] for item in lowercase_response.json))
         self.assertLessEqual(len(response.json), 6)
         self.assertEqual(self.client.get('/api/product-suggestions').json, [])
+
+    def test_product_pages_use_real_photo_fallback(self):
+        with app_module.app.app_context():
+            app_module.db().execute("UPDATE products SET image='' WHERE id=1")
+            app_module.db().commit()
+
+        product_page = self.client.get('/product/1')
+        self.assertEqual(product_page.status_code, 200)
+        self.assertIn(b'/static/images/hero_fruits.jpg', product_page.data)
+        listing = self.client.get('/products')
+        self.assertEqual(listing.status_code, 200)
+        self.assertIn(b'/static/images/hero_fruits.jpg', listing.data)
 
     def test_seed_catalog_adds_northern_fruit_and_multiple_coupons(self):
         names = [product[0] for product in app_module.NORTHERN_PRODUCTS]
@@ -154,6 +168,7 @@ class ApplicationFlowTests(unittest.TestCase):
             'DO UPDATE SET quantity=cart_items.quantity+excluded.quantity RETURNING id',
         )
         self.assertTrue(any('CREATE TABLE IF NOT EXISTS orders' in sql for sql in POSTGRES_SCHEMA))
+        self.assertTrue(any('CREATE TABLE IF NOT EXISTS staff_access_sessions' in sql for sql in POSTGRES_SCHEMA))
 
     def test_chat_widget_endpoint_and_empty_input_validation(self):
         token = self.csrf_token('/')
@@ -818,6 +833,79 @@ class ApplicationFlowTests(unittest.TestCase):
                 session.update(user_id=role_users[role], email=f'{role}@example.com')
             for path, status in checks.items():
                 self.assertEqual(self.client.get(path).status_code, status, f'{role} -> {path}')
+
+    def test_admin_can_access_staff_permissions_and_return_with_audit(self):
+        admin_id = self.create_admin()
+        with app_module.app.app_context():
+            cashier_id = app_module.db().execute(
+                'INSERT INTO users(name,email,password_hash,role) VALUES(?,?,?,?)',
+                ('Test Cashier', 'cashier@example.com', 'unused', 'cashier'),
+            ).lastrowid
+            app_module.db().commit()
+
+        with self.client.session_transaction() as session:
+            session.update(user_id=admin_id, email='admin@example.com')
+        staff_page = self.client.get('/admin/staff')
+        self.assertEqual(staff_page.status_code, 200)
+        self.assertIn('Truy cập quyền này'.encode('utf-8'), staff_page.data)
+
+        token = self.csrf_token('/admin/staff')
+        response = self.client.post(
+            f'/admin/staff/{cashier_id}/access',
+            data={'_csrf': token},
+        )
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(response.headers['Location'], '/staff/pos')
+        with self.client.session_transaction() as session:
+            self.assertEqual(session['user_id'], cashier_id)
+            self.assertEqual(session['role'], 'cashier')
+            self.assertEqual(session['staff_access_admin_id'], admin_id)
+            self.assertIn('staff_access_log_id', session)
+
+        self.assertEqual(self.client.get('/admin').status_code, 403)
+        self.assertEqual(self.client.get('/staff/packing').status_code, 403)
+        self.assertEqual(self.client.get('/staff/pos').status_code, 200)
+        token = self.csrf_token('/staff/pos')
+        restored = self.client.post(
+            '/admin/staff/access/return',
+            data={'_csrf': token},
+        )
+        self.assertEqual(restored.status_code, 302)
+        self.assertEqual(restored.headers['Location'], '/admin/staff')
+        with self.client.session_transaction() as session:
+            self.assertEqual(session['user_id'], admin_id)
+            self.assertEqual(session['role'], 'admin')
+            self.assertNotIn('staff_access_admin_id', session)
+        with app_module.app.app_context():
+            access = app_module.db().execute(
+                'SELECT admin_user_id,staff_user_id,started_at,ended_at '
+                'FROM staff_access_sessions'
+            ).fetchone()
+        self.assertEqual(access['admin_user_id'], admin_id)
+        self.assertEqual(access['staff_user_id'], cashier_id)
+        self.assertIsNotNone(access['started_at'])
+        self.assertIsNotNone(access['ended_at'])
+
+    def test_non_admin_cannot_start_staff_access(self):
+        with app_module.app.app_context():
+            manager_id = app_module.db().execute(
+                'INSERT INTO users(name,email,password_hash,role) VALUES(?,?,?,?)',
+                ('Test Manager', 'manager@example.com', 'unused', 'manager'),
+            ).lastrowid
+            cashier_id = app_module.db().execute(
+                'INSERT INTO users(name,email,password_hash,role) VALUES(?,?,?,?)',
+                ('Test Cashier', 'cashier@example.com', 'unused', 'cashier'),
+            ).lastrowid
+            app_module.db().commit()
+
+        with self.client.session_transaction() as session:
+            session.update(user_id=manager_id, email='manager@example.com')
+        token = self.csrf_token('/staff/pos')
+        response = self.client.post(
+            f'/admin/staff/{cashier_id}/access',
+            data={'_csrf': token},
+        )
+        self.assertEqual(response.status_code, 403)
 
     def test_admin_can_create_staff_with_role(self):
         admin_id = self.create_admin()

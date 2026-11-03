@@ -8,7 +8,7 @@
   <div class="cart-layout">
     <form method="post" class="panel form-panel" id="checkout-form">
       <input type="hidden" name="_csrf" value="{{csrf_token()}}">
-      <h2>📍 Thông tin giao hàng</h2>
+      <h2>Thông tin giao hàng</h2>
       <label>Họ tên người nhận<input name="recipient" value="{{user.name}}" required></label>
       <label>Số điện thoại<input name="phone" value="{{user.phone}}" required minlength="9"></label>
       <label>Địa chỉ giao hàng<textarea name="address" required minlength="8">{{user.address}}</textarea></label>
@@ -24,7 +24,7 @@
         </select>
       </label>
       <p class="muted">Chọn mã ưu đãi; số tiền được cập nhật tự động.</p>
-      <h3>💵 Thanh toán khi nhận hàng (COD)</h3>
+      <h3>Thanh toán khi nhận hàng (COD)</h3>
       <p class="muted">Bản demo hỗ trợ thanh toán khi nhận hàng (COD).</p>
       <button class="cta full">Xác nhận đặt hàng</button>
     </form>

@@ -174,9 +174,14 @@
         link.setAttribute('role', 'option');
         link.setAttribute('aria-selected', 'false');
 
-        const emoji = document.createElement('span');
-        emoji.className = 'search-suggestion-emoji';
-        emoji.textContent = item.emoji || '🍎';
+        const image = document.createElement('img');
+        image.className = 'search-suggestion-image';
+        image.src = item.image;
+        image.alt = '';
+        image.onerror = () => {
+          image.onerror = null;
+          image.src = '/static/images/hero_fruits.jpg';
+        };
         const details = document.createElement('span');
         details.className = 'search-suggestion-details';
         const name = document.createElement('strong');
@@ -184,7 +189,7 @@
         const category = document.createElement('small');
         category.textContent = item.category;
         details.append(name, category);
-        link.append(emoji, details);
+        link.append(image, details);
         list.appendChild(link);
       });
     }

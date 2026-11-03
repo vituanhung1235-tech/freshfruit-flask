@@ -55,31 +55,31 @@ else:
 
 
 PRODUCTS = [
-    ('Táo Fuji Nhật Bản', 'Nhập khẩu', 89000, 'kg', 'Táo giòn ngọt, mọng nước, nhập khẩu trực tiếp. Chứa nhiều vitamin và chất chống oxy hóa.', '🍎', '/static/images/apple.jpg', 40),
-    ('Cam vàng Úc', 'Nhập khẩu', 76000, 'kg', 'Cam vàng mọng nước, vị ngọt thanh mát, giàu vitamin C tăng cường đề kháng.', '🍊', '/static/images/orange.jpg', 35),
-    ('Nho xanh không hạt', 'Nhập khẩu', 159000, 'kg', 'Nho xanh giòn ngọt, không hạt, trái mọng chùm đều đẹp mắt.', '🍇', '/static/images/grapes.jpg', 28),
-    ('Dâu tây Đà Lạt', 'Việt Nam', 119000, 'hộp', 'Dâu tây giống New Zealand trồng tại Đà Lạt, quả đỏ mọng, thơm ngọt tự nhiên.', '🍓', '/static/images/strawberry.jpg', 30),
-    ('Xoài cát Hòa Lộc', 'Việt Nam', 65000, 'kg', 'Đặc sản miền Tây, thịt xoài dẻo mịn, thơm ngát, vị ngọt đậm đà khó quên.', '🥭', '/static/images/mango.jpg', 45),
-    ('Dưa hấu ruột đỏ', 'Theo mùa', 24000, 'kg', 'Dưa hấu Long An quả tròn đều, ruột đỏ tươi, nhiều nước và ngọt mát giải nhiệt.', '🍉', '/static/images/watermelon.jpg', 65),
-    ('Chuối già Nam Mỹ', 'Việt Nam', 32000, 'nải', 'Chuối già Nam Mỹ chuẩn GlobalGAP, dồi dào kali và năng lượng cho cơ thể.', '🍌', '/static/images/banana.jpg', 60),
-    ('Dứa mật', 'Theo mùa', 35000, 'quả', 'Dứa mật ngọt lịm, thơm lừng, thịt vàng ươm thích hợp ăn tươi hoặc ép nước.', '🍍', '/static/images/pineapple.jpg', 55),
-    ('Kiwi xanh New Zealand', 'Nhập khẩu', 135000, 'kg', 'Kiwi xanh vị chua ngọt hài hòa, hàm lượng chất xơ và vitamin C vượt trội.', '🥝', '/static/images/kiwi.jpg', 26),
-    ('Thanh long ruột đỏ', 'Việt Nam', 42000, 'kg', 'Thanh long ruột đỏ Bình Thuận tươi rói, vị ngọt thanh mát, màu sắc bắt mắt.', '🐉', '/static/images/dragonfruit.jpg', 48),
-    ('Lê Hàn Quốc', 'Nhập khẩu', 99000, 'kg', 'Lê nâu Hàn Quốc mọng nước, vỏ mỏng thịt giòn ngọt, thanh nhiệt cơ thể.', '🍐', '/static/images/pear.jpg', 32),
-    ('Giỏ quà trái cây', 'Giỏ quà', 399000, 'giỏ', 'Giỏ quà thiết kế sang trọng, kết hợp các loại trái cây cao cấp tươi ngon trong ngày.', '🎁', '/static/images/giftbasket.jpg', 18),
+    ('Táo Fuji Nhật Bản', 'Nhập khẩu', 89000, 'kg', 'Táo giòn ngọt, mọng nước, nhập khẩu trực tiếp. Chứa nhiều vitamin và chất chống oxy hóa.', '', '/static/images/apple.jpg', 40),
+    ('Cam vàng Úc', 'Nhập khẩu', 76000, 'kg', 'Cam vàng mọng nước, vị ngọt thanh mát, giàu vitamin C tăng cường đề kháng.', '', '/static/images/orange.jpg', 35),
+    ('Nho xanh không hạt', 'Nhập khẩu', 159000, 'kg', 'Nho xanh giòn ngọt, không hạt, trái mọng chùm đều đẹp mắt.', '', '/static/images/grapes.jpg', 28),
+    ('Dâu tây Đà Lạt', 'Việt Nam', 119000, 'hộp', 'Dâu tây giống New Zealand trồng tại Đà Lạt, quả đỏ mọng, thơm ngọt tự nhiên.', '', '/static/images/strawberry.jpg', 30),
+    ('Xoài cát Hòa Lộc', 'Việt Nam', 65000, 'kg', 'Đặc sản miền Tây, thịt xoài dẻo mịn, thơm ngát, vị ngọt đậm đà khó quên.', '', '/static/images/mango.jpg', 45),
+    ('Dưa hấu ruột đỏ', 'Theo mùa', 24000, 'kg', 'Dưa hấu Long An quả tròn đều, ruột đỏ tươi, nhiều nước và ngọt mát giải nhiệt.', '', '/static/images/watermelon.jpg', 65),
+    ('Chuối già Nam Mỹ', 'Việt Nam', 32000, 'nải', 'Chuối già Nam Mỹ chuẩn GlobalGAP, dồi dào kali và năng lượng cho cơ thể.', '', '/static/images/banana.jpg', 60),
+    ('Dứa mật', 'Theo mùa', 35000, 'quả', 'Dứa mật ngọt lịm, thơm lừng, thịt vàng ươm thích hợp ăn tươi hoặc ép nước.', '', '/static/images/pineapple.jpg', 55),
+    ('Kiwi xanh New Zealand', 'Nhập khẩu', 135000, 'kg', 'Kiwi xanh vị chua ngọt hài hòa, hàm lượng chất xơ và vitamin C vượt trội.', '', '/static/images/kiwi.jpg', 26),
+    ('Thanh long ruột đỏ', 'Việt Nam', 42000, 'kg', 'Thanh long ruột đỏ Bình Thuận tươi rói, vị ngọt thanh mát, màu sắc bắt mắt.', '', '/static/images/dragonfruit.jpg', 48),
+    ('Lê Hàn Quốc', 'Nhập khẩu', 99000, 'kg', 'Lê nâu Hàn Quốc mọng nước, vỏ mỏng thịt giòn ngọt, thanh nhiệt cơ thể.', '', '/static/images/pear.jpg', 32),
+    ('Giỏ quà trái cây', 'Giỏ quà', 399000, 'giỏ', 'Giỏ quà thiết kế sang trọng, kết hợp các loại trái cây cao cấp tươi ngon trong ngày.', '', '/static/images/giftbasket.jpg', 18),
 ]
 
 NORTHERN_PRODUCTS = [
-    ('Vải thiều Lục Ngạn', 'Việt Nam', 85000, 'kg', 'Vải thiều Lục Ngạn cùi dày, thơm ngọt, đặc sản Bắc Giang vào mùa hè.', '🍒', '/static/images/fruit-lychee.jpg', 35),
-    ('Nhãn lồng Hưng Yên', 'Việt Nam', 75000, 'kg', 'Nhãn lồng Hưng Yên hạt nhỏ, cùi dày và vị ngọt đậm đặc trưng.', '🍈', '/static/images/fruit-longan.jpg', 30),
-    ('Cam Cao Phong Hòa Bình', 'Việt Nam', 55000, 'kg', 'Cam Cao Phong mọng nước, vị ngọt dịu, được trồng tại vùng đồi Hòa Bình.', '🍊', '/static/images/fruit-orange.jpg', 40),
-    ('Bưởi Diễn Hà Nội', 'Việt Nam', 65000, 'quả', 'Bưởi Diễn thơm nhẹ, tép ráo và ngọt đậm, đặc sản nổi tiếng của Hà Nội.', '🍊', '/static/images/fruit-grapefruit.jpg', 28),
-    ('Hồng không hạt Bắc Kạn', 'Việt Nam', 69000, 'kg', 'Hồng không hạt Bắc Kạn giòn ngọt, đặc sản vùng núi phía Bắc vào mùa thu.', '🍅', '/static/images/fruit-persimmon.jpg', 24),
-    ('Mận hậu Sơn La', 'Theo mùa', 59000, 'kg', 'Mận hậu Sơn La giòn chua ngọt, quả tươi theo mùa từ vùng cao Tây Bắc.', '🍑', '/static/images/fruit-plum.jpg', 32),
-    ('Đào Sa Pa Lào Cai', 'Theo mùa', 89000, 'kg', 'Đào Sa Pa thơm dịu, vị ngọt thanh, được thu hoạch theo mùa ở vùng núi cao.', '🍑', '/static/images/fruit-peach.jpg', 22),
-    ('Dâu tây Mộc Châu', 'Theo mùa', 125000, 'hộp', 'Dâu tây Mộc Châu đỏ mọng, thơm ngọt, trồng tại cao nguyên Sơn La.', '🍓', '/static/images/fruit-strawberry.jpg', 26),
-    ('Lê Bắc Hà Lào Cai', 'Theo mùa', 78000, 'kg', 'Lê Bắc Hà giòn mọng nước, vị ngọt mát, đặc sản theo mùa của Lào Cai.', '🍐', '/static/images/fruit-pear.png', 25),
-    ('Quýt Bắc Sơn Lạng Sơn', 'Theo mùa', 62000, 'kg', 'Quýt Bắc Sơn thơm tinh dầu, ngọt thanh và được thu hoạch vào mùa đông.', '🍊', '/static/images/fruit-mandarin.jpg', 30),
+    ('Vải thiều Lục Ngạn', 'Việt Nam', 85000, 'kg', 'Vải thiều Lục Ngạn cùi dày, thơm ngọt, đặc sản Bắc Giang vào mùa hè.', '', '/static/images/fruit-lychee.jpg', 35),
+    ('Nhãn lồng Hưng Yên', 'Việt Nam', 75000, 'kg', 'Nhãn lồng Hưng Yên hạt nhỏ, cùi dày và vị ngọt đậm đặc trưng.', '', '/static/images/fruit-longan.jpg', 30),
+    ('Cam Cao Phong Hòa Bình', 'Việt Nam', 55000, 'kg', 'Cam Cao Phong mọng nước, vị ngọt dịu, được trồng tại vùng đồi Hòa Bình.', '', '/static/images/fruit-orange.jpg', 40),
+    ('Bưởi Diễn Hà Nội', 'Việt Nam', 65000, 'quả', 'Bưởi Diễn thơm nhẹ, tép ráo và ngọt đậm, đặc sản nổi tiếng của Hà Nội.', '', '/static/images/fruit-grapefruit.jpg', 28),
+    ('Hồng không hạt Bắc Kạn', 'Việt Nam', 69000, 'kg', 'Hồng không hạt Bắc Kạn giòn ngọt, đặc sản vùng núi phía Bắc vào mùa thu.', '', '/static/images/fruit-persimmon.jpg', 24),
+    ('Mận hậu Sơn La', 'Theo mùa', 59000, 'kg', 'Mận hậu Sơn La giòn chua ngọt, quả tươi theo mùa từ vùng cao Tây Bắc.', '', '/static/images/fruit-plum.jpg', 32),
+    ('Đào Sa Pa Lào Cai', 'Theo mùa', 89000, 'kg', 'Đào Sa Pa thơm dịu, vị ngọt thanh, được thu hoạch theo mùa ở vùng núi cao.', '', '/static/images/fruit-peach.jpg', 22),
+    ('Dâu tây Mộc Châu', 'Theo mùa', 125000, 'hộp', 'Dâu tây Mộc Châu đỏ mọng, thơm ngọt, trồng tại cao nguyên Sơn La.', '', '/static/images/fruit-strawberry.jpg', 26),
+    ('Lê Bắc Hà Lào Cai', 'Theo mùa', 78000, 'kg', 'Lê Bắc Hà giòn mọng nước, vị ngọt mát, đặc sản theo mùa của Lào Cai.', '', '/static/images/fruit-pear.png', 25),
+    ('Quýt Bắc Sơn Lạng Sơn', 'Theo mùa', 62000, 'kg', 'Quýt Bắc Sơn thơm tinh dầu, ngọt thanh và được thu hoạch vào mùa đông.', '', '/static/images/fruit-mandarin.jpg', 30),
 ]
 
 SEED_PRODUCTS = PRODUCTS + NORTHERN_PRODUCTS
@@ -226,6 +226,22 @@ def db():
             g.db.execute('PRAGMA foreign_keys=ON')
     return g.db
 
+PRODUCT_IMAGE_FALLBACK = '/static/images/hero_fruits.jpg'
+
+
+def end_staff_access_session():
+    access_id = session.get('staff_access_log_id')
+    admin_id = session.get('staff_access_admin_id')
+    if access_id is None or admin_id is None:
+        return
+    db().execute(
+        'UPDATE staff_access_sessions SET ended_at=? '
+        'WHERE id=? AND admin_user_id=? AND ended_at IS NULL',
+        (datetime.now().isoformat(timespec='seconds'), access_id, admin_id),
+    )
+    db().commit()
+
+
 app.register_blueprint(create_password_reset_blueprint(db))
 
 @app.teardown_appcontext
@@ -284,6 +300,7 @@ def init_db():
     CREATE TABLE IF NOT EXISTS reviews(id INTEGER PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id), product_id INTEGER NOT NULL REFERENCES products(id), stars INTEGER NOT NULL CHECK(stars BETWEEN 1 AND 5), content TEXT NOT NULL, created_at TEXT NOT NULL, UNIQUE(user_id, product_id));
     CREATE TABLE IF NOT EXISTS coupons(code TEXT PRIMARY KEY, discount_percent INTEGER NOT NULL, active INTEGER NOT NULL DEFAULT 1);
     CREATE TABLE IF NOT EXISTS password_reset_tokens(token_hash TEXT PRIMARY KEY, user_id INTEGER NOT NULL REFERENCES users(id) ON DELETE CASCADE, expires_at TEXT NOT NULL, created_at TEXT NOT NULL);
+    CREATE TABLE IF NOT EXISTS staff_access_sessions(id INTEGER PRIMARY KEY, admin_user_id INTEGER NOT NULL REFERENCES users(id), staff_user_id INTEGER NOT NULL REFERENCES users(id), started_at TEXT NOT NULL, ended_at TEXT);
     ''')
     cols = [col[1] for col in conn.execute("PRAGMA table_info(products)").fetchall()]
     if 'image' not in cols:
@@ -363,6 +380,8 @@ def inject():
         'current_user': session.get('name'),
         'user_role': session.get('role', 'customer'),
         'is_admin': session.get('role') in ('admin', 'manager'),
+        'staff_access_active': session.get('staff_access_log_id') is not None,
+        'staff_access_role': session.get('role'),
         'available_coupons': db().execute(
             'SELECT code, discount_percent FROM coupons WHERE active=1 '
             'ORDER BY discount_percent DESC, code'
@@ -370,7 +389,7 @@ def inject():
         'product_image_src': lambda product: (
             url_for('uploaded_product_image', pid=product['id'])
             if (product['image'] or '').startswith('data:image/')
-            else product['image']
+            else product['image'] or PRODUCT_IMAGE_FALLBACK
         ),
         'money': lambda x: f'{int(x):,}'.replace(',', '.') + 'đ'
     }
@@ -390,6 +409,19 @@ def validate_authenticated_session():
     if user_id is None:
         return
 
+    staff_access_admin_id = session.get('staff_access_admin_id')
+    if staff_access_admin_id is not None:
+        admin = db().execute(
+            "SELECT id FROM users WHERE id=? AND role='admin'",
+            (staff_access_admin_id,),
+        ).fetchone()
+        if not admin:
+            end_staff_access_session()
+            session.clear()
+            session['csrf'] = os.urandom(24).hex()
+            flash('Phiên truy cập nhân viên đã kết thúc. Vui lòng đăng nhập lại.', 'warning')
+            return
+
     email = session.get('email')
     if email:
         user = db().execute(
@@ -402,6 +434,7 @@ def validate_authenticated_session():
             (user_id,),
         ).fetchone()
     if not user:
+        end_staff_access_session()
         session.clear()
         session['csrf'] = os.urandom(24).hex()
         flash('Phiên đăng nhập đã hết hạn. Vui lòng đăng nhập lại.', 'warning')
@@ -493,7 +526,7 @@ def product_suggestions():
         'POSITION(? IN lower(name))' if DATABASE_URL else 'instr(lower(name), ?)'
     )
     rows = db().execute(
-        'SELECT id, name, category, emoji FROM products '
+        'SELECT id, name, category, image FROM products '
         'WHERE active=1 AND lower(name) LIKE ? '
         'ORDER BY CASE WHEN lower(name) LIKE ? THEN 0 '
         'WHEN lower(name) LIKE ? THEN 1 ELSE 2 END, '
@@ -504,7 +537,11 @@ def product_suggestions():
         {
             'name': row['name'],
             'category': row['category'],
-            'emoji': row['emoji'],
+            'image': (
+                url_for('uploaded_product_image', pid=row['id'])
+                if (row['image'] or '').startswith('data:image/')
+                else row['image'] or PRODUCT_IMAGE_FALLBACK
+            ),
             'url': url_for('product', pid=row['id']),
         }
         for row in rows
@@ -585,6 +622,7 @@ def register():
             flash('Kiểm tra họ tên, email, mật khẩu (ít nhất 8 ký tự) và xác nhận.', 'danger')
         else:
             try:
+                end_staff_access_session()
                 cursor = db().execute('INSERT INTO users(name, email, password_hash) VALUES(?,?,?)', (name, email, generate_password_hash(password)))
                 db().commit()
                 session.clear()
@@ -603,6 +641,7 @@ def login():
         password = request.form.get('password', '')
         user = db().execute('SELECT * FROM users WHERE email=?', (email,)).fetchone()
         if user and check_password_hash(user['password_hash'], password):
+            end_staff_access_session()
             session.clear()
             session.update(user_id=user['id'], email=user['email'], name=user['name'], role=user['role'], csrf=os.urandom(24).hex())
             destination = {
@@ -617,6 +656,7 @@ def login():
 
 @app.post('/logout')
 def logout():
+    end_staff_access_session()
     session.clear()
     flash('Đã đăng xuất.', 'success')
     return redirect(url_for('home'))
@@ -819,7 +859,6 @@ def admin_product():
         category = request.form['category'].strip()[:50]
         unit = request.form['unit'].strip()[:20]
         description = request.form.get('description', '').strip()[:500]
-        emoji = request.form.get('emoji', '🍎').strip()[:10]
         uploaded_image = encode_product_image(request.files.get('image'))
         try:
             price = int(request.form['price'])
@@ -840,10 +879,10 @@ def admin_product():
         else:
             image = ''
         if pid:
-            db().execute('UPDATE products SET name=?, category=?, price=?, unit=?, description=?, emoji=?, image=?, stock=? WHERE id=?', (name, category, price, unit, description, emoji, image, stock, pid))
+            db().execute('UPDATE products SET name=?, category=?, price=?, unit=?, description=?, emoji=?, image=?, stock=? WHERE id=?', (name, category, price, unit, description, '', image, stock, pid))
             saved_id = pid
         else:
-            cursor = db().execute('INSERT INTO products(name, category, price, unit, description, emoji, image, stock) VALUES(?,?,?,?,?,?,?,?)', (name, category, price, unit, description, emoji, image, stock))
+            cursor = db().execute('INSERT INTO products(name, category, price, unit, description, emoji, image, stock) VALUES(?,?,?,?,?,?,?,?)', (name, category, price, unit, description, '', image, stock))
             saved_id = cursor.lastrowid
         db().commit()
         flash(
@@ -960,7 +999,99 @@ def staff_management():
     staff = db().execute(
         "SELECT id,name,email,role FROM users WHERE role IN ('manager','cashier','packer') ORDER BY role,name"
     ).fetchall()
-    return render_template('staff.html', staff=staff)
+    access_history = db().execute(
+        'SELECT access.id, admin.name AS admin_name, staff.name AS staff_name, '
+        'staff.email AS staff_email, access.started_at, access.ended_at '
+        'FROM staff_access_sessions access '
+        'JOIN users admin ON admin.id=access.admin_user_id '
+        'JOIN users staff ON staff.id=access.staff_user_id '
+        'ORDER BY access.id DESC LIMIT 20'
+    ).fetchall()
+    return render_template('staff.html', staff=staff, access_history=access_history)
+
+
+@app.post('/admin/staff/<int:staff_id>/access')
+@system_admin_required
+def admin_staff_access(staff_id):
+    if session.get('staff_access_log_id') is not None:
+        abort(403)
+
+    staff = db().execute(
+        "SELECT id,email,name,role FROM users "
+        "WHERE id=? AND role IN ('manager','cashier','packer')",
+        (staff_id,),
+    ).fetchone()
+    if not staff:
+        abort(404)
+
+    admin_id = session['user_id']
+    cursor = db().execute(
+        'INSERT INTO staff_access_sessions(admin_user_id,staff_user_id,started_at) '
+        'VALUES(?,?,?)',
+        (admin_id, staff['id'], datetime.now().isoformat(timespec='seconds')),
+    )
+    db().commit()
+    session.update(
+        staff_access_admin_id=admin_id,
+        staff_access_log_id=cursor.lastrowid,
+        user_id=staff['id'],
+        email=staff['email'],
+        name=staff['name'],
+        role=staff['role'],
+        csrf=os.urandom(24).hex(),
+    )
+    app.logger.info(
+        'Admin %s started staff account access for user %s.',
+        admin_id,
+        staff['id'],
+    )
+    flash(
+        f'Đang truy cập với vai trò {staff["name"]} ({staff["role"]}). '
+        'Các thao tác được thực hiện theo đúng quyền của tài khoản nhân viên.',
+        'warning',
+    )
+    destination = {
+        'manager': 'admin',
+        'cashier': 'point_of_sale',
+        'packer': 'packing_queue',
+    }[staff['role']]
+    return redirect(url_for(destination))
+
+
+@app.post('/admin/staff/access/return')
+@login_required
+def return_from_staff_access():
+    access_id = session.get('staff_access_log_id')
+    admin_id = session.get('staff_access_admin_id')
+    if access_id is None or admin_id is None:
+        abort(403)
+
+    admin = db().execute(
+        "SELECT id,email,name,role FROM users WHERE id=? AND role='admin'",
+        (admin_id,),
+    ).fetchone()
+    end_staff_access_session()
+    if not admin:
+        session.clear()
+        session['csrf'] = os.urandom(24).hex()
+        flash('Tài khoản admin không còn quyền quản trị. Vui lòng đăng nhập lại.', 'warning')
+        return redirect(url_for('login'))
+
+    session.clear()
+    session.update(
+        user_id=admin['id'],
+        email=admin['email'],
+        name=admin['name'],
+        role=admin['role'],
+        csrf=os.urandom(24).hex(),
+    )
+    app.logger.info(
+        'Admin %s ended staff account access session %s.',
+        admin['id'],
+        access_id,
+    )
+    flash('Đã quay lại tài khoản admin.', 'success')
+    return redirect(url_for('staff_management'))
 
 
 @app.route('/staff/pos', methods=['GET', 'POST'])
@@ -1083,7 +1214,7 @@ def get_smart_bot_reply(question: str, catalog: list) -> str:
     # 1. Greetings
     if any(w in lower for w in ['chào', 'hello', 'hi ', 'hey', 'alo', 'shop ơi', 'ad ơi', 'bot ơi', 'xin chào']):
         return (
-            "Xin chào bạn! Mình là Tuấn Hùng AI - trợ lý hoa quả của Tuấn Hùng Fruit 🍃.\n\n"
+            "Xin chào bạn! Mình là Tuấn Hùng AI - trợ lý hoa quả của Tuấn Hùng Fruit.\n\n"
             "Mình có thể hỗ trợ bạn:\n"
             "• Tra cứu giá cả và độ tươi ngon các loại trái cây\n"
             "• Tư vấn hoa quả tăng đề kháng, bồi bổ sức khỏe, ăn kiêng\n"
@@ -1094,7 +1225,7 @@ def get_smart_bot_reply(question: str, catalog: list) -> str:
     # 2. Coupon / Discount
     if any(w in lower for w in ['mã', 'khuyến mãi', 'voucher', 'coupon', 'ưu đãi', 'giảm giá', 'sale']):
         return (
-            "🎉 **Ưu đãi hấp dẫn đang áp dụng tại Tuấn Hùng Fruit:**\n\n"
+            "**Ưu đãi hấp dẫn đang áp dụng tại Tuấn Hùng Fruit:**\n\n"
             "• Mã giảm giá: **FRESH10**\n"
             "• Mức giảm: **10%** trên tổng giá trị đơn hàng\n"
             "• Cách dùng: Bạn chỉ cần nhập mã **FRESH10** vào ô 'Mã giảm giá' ở trang Thanh toán.\n\n"
@@ -1104,7 +1235,7 @@ def get_smart_bot_reply(question: str, catalog: list) -> str:
     # 3. How to order / payment / delivery
     if any(w in lower for w in ['đặt hàng', 'mua hàng', 'thanh toán', 'mua như thế nào', 'cách đặt', 'vận chuyển', 'giao hàng', 'ship', 'cod']):
         return (
-            "📦 **Quy trình mua hàng cực kỳ dễ dàng tại Tuấn Hùng Fruit:**\n\n"
+            "**Quy trình mua hàng tại Tuấn Hùng Fruit:**\n\n"
             "1. **Tài khoản**: Đăng nhập hoặc Đăng ký nhanh nếu chưa có tài khoản.\n"
             "2. **Chọn mua**: Vào mục 'Sản phẩm', chọn hoa quả yêu thích và bấm 'Thêm vào giỏ'.\n"
             "3. **Thanh toán**: Mở Giỏ hàng → 'Tiến hành thanh toán', điền người nhận, địa chỉ và mã **FRESH10**.\n"
@@ -1114,7 +1245,7 @@ def get_smart_bot_reply(question: str, catalog: list) -> str:
     # 4. Nutrition, Vitamin C, Immune
     if any(w in lower for w in ['vitamin', 'đề kháng', 'sức khỏe', 'bổ dưỡng', 'dinh dưỡng']):
         return (
-            "🌿 **Tư vấn trái cây giàu vitamin & tăng cường sức khỏe:**\n\n"
+            "**Tư vấn trái cây giàu vitamin & tăng cường sức khỏe:**\n\n"
             "• **Giàu Vitamin C nhất**: Cam vàng Úc (76.000đ/kg) và Kiwi xanh New Zealand (135.000đ/kg) giúp tăng cường sức đề kháng tối ưu.\n"
             "• **Chống lão hóa & đẹp da**: Nho xanh không hạt (159.000đ/kg) và Dâu tây Đà Lạt (119.000đ/hộp) chứa hàm lượng chất chống oxy hóa cao.\n"
             "• **Cung cấp năng lượng**: Chuối già Nam Mỹ (32.000đ/nải) giàu kali và khoáng chất tự nhiên.\n\n"
@@ -1124,11 +1255,11 @@ def get_smart_bot_reply(question: str, catalog: list) -> str:
     # 5. Diet, Weight Loss, Diabetes
     if any(w in lower for w in ['giảm cân', 'ăn kiêng', 'tiểu đường', 'eat clean', 'keto']):
         return (
-            "🥗 **Gợi ý trái cây thanh mát cho chế độ ăn kiêng & giảm cân:**\n\n"
+            "**Gợi ý trái cây thanh mát cho chế độ ăn kiêng & giảm cân:**\n\n"
             "• **Thanh long ruột đỏ**: Giàu chất xơ, lượng calo thấp, hỗ trợ nhuận tràng và thanh lọc cơ thể.\n"
             "• **Táo Fuji Nhật Bản & Kiwi xanh**: Chỉ số đường huyết (GI) thấp, tạo cảm giác no lâu, tốt cho người kiểm soát cân nặng hoặc đường huyết.\n"
             "• **Dưa hấu ruột đỏ**: Nhiều nước, mát lạnh giải nhiệt, ít calo khi dùng lượng vừa phải.\n\n"
-            "💡 Mẹo nhỏ: Nên dùng hoa quả tươi vào bữa phụ hoặc trước bữa ăn chính 30 phút."
+            "Mẹo nhỏ: Nên dùng hoa quả tươi vào bữa phụ hoặc trước bữa ăn chính 30 phút."
         )
 
     # 6. Gift basket
@@ -1136,7 +1267,7 @@ def get_smart_bot_reply(question: str, catalog: list) -> str:
         gift = next((p for p in catalog if 'giỏ quà' in p['name'].lower()), None)
         price_str = f"{gift['price']:,}đ" if gift else "399.000đ"
         return (
-            f"🎁 **Giỏ quà trái cây cao cấp Tuấn Hùng Fruit ({price_str}/giỏ):**\n\n"
+            f"**Giỏ quà trái cây cao cấp Tuấn Hùng Fruit ({price_str}/giỏ):**\n\n"
             "• Thành phần: Tuyển chọn các loại quả thượng hạng trong ngày (Táo Fuji, Nho xanh không hạt, Cam Úc, Kiwi, Lê Hàn Quốc).\n"
             "• Thiết kế: Giỏ mây hoặc khay gỗ sang trọng, bọc màng co và trang trí nơ lụa tỉ mỉ.\n"
             "• Rất phù hợp: Làm quà biếu lễ, thăm hỏi người thân, bạn bè hoặc đối tác.\n\n"
@@ -1163,7 +1294,7 @@ def get_smart_bot_reply(question: str, catalog: list) -> str:
             if matched:
                 stock_status = f"✓ Còn {matched['stock']} {matched['unit']}" if matched['stock'] > 0 else "Hết hàng"
                 return (
-                    f"🍎 **{matched['name']}**:\n\n"
+                    f"**{matched['name']}**:\n\n"
                     f"• Giá niêm yết: **{matched['price']:,} VND / {matched['unit']}**\n"
                     f"• Tình trạng kho: {stock_status}\n"
                     f"• Cam kết: Tươi ngon 100%, nhập mới đều đặn, tuyển chọn kỹ càng.\n\n"
@@ -1174,15 +1305,15 @@ def get_smart_bot_reply(question: str, catalog: list) -> str:
     if any(w in lower for w in ['giá', 'bảng giá', 'bao nhiêu', 'menu', 'sản phẩm', 'hoa quả', 'trái cây', 'danh mục', 'có gì', 'danh sách']):
         lines = [f"• **{p['name']}**: {p['price']:,}đ/{p['unit']} ({'Còn ' + str(p['stock']) if p['stock'] > 0 else 'Hết hàng'})" for p in catalog[:12]]
         return (
-            "🛒 **Danh mục & Bảng giá trái cây tươi tại Tuấn Hùng Fruit:**\n\n"
+            "**Danh mục & Bảng giá trái cây tươi tại Tuấn Hùng Fruit:**\n\n"
             + "\n".join(lines)
-            + "\n\n💡 Nhập mã **FRESH10** khi thanh toán để nhận ngay giảm giá 10%!"
+            + "\n\nNhập mã **FRESH10** khi thanh toán để nhận ngay giảm giá 10%!"
         )
 
     # 9. Storage / Preservation
     if any(w in lower for w in ['bảo quản', 'để được bao lâu', 'tủ lạnh', 'giữ tươi']):
         return (
-            "❄️ **Bí quyết bảo quản hoa quả luôn tươi ngon:**\n\n"
+            "**Bí quyết bảo quản hoa quả luôn tươi ngon:**\n\n"
             "• Bảo quản ở ngăn mát tủ lạnh ở nhiệt độ 4 - 8°C.\n"
             "• Không nên rửa trước khi cất tủ lạnh, chỉ rửa ngay trước khi dùng.\n"
             "• Dùng hộp kín hoặc túi có lỗ thông khí để quả giữ được độ ẩm tự nhiên.\n"
@@ -1191,7 +1322,7 @@ def get_smart_bot_reply(question: str, catalog: list) -> str:
 
     # Default fallback
     return (
-        "Cảm ơn bạn đã nhắn tin cho Tuấn Hùng Fruit! 🍃\n\n"
+        "Cảm ơn bạn đã nhắn tin cho Tuấn Hùng Fruit!\n\n"
         "Bạn có thể hỏi mình về:\n"
         "• Bảng giá các loại quả: Táo, Cam, Nho, Dâu tây, Xoài, Kiwi, Dưa hấu...\n"
         "• Mã giảm giá ưu đãi (**FRESH10** - giảm 10%)\n"
@@ -1232,7 +1363,7 @@ def chat():
                     
             system_prompt = (
                 "Bạn là Tuấn Hùng AI, trợ lý ảo thông minh của cửa hàng hoa quả Tuấn Hùng Fruit tại Việt Nam. "
-                "Hãy trả lời bằng tiếng Việt tự nhiên, thân thiện, súc tích. "
+                "Hãy trả lời bằng tiếng Việt tự nhiên, thân thiện, súc tích và không dùng emoji. "
                 "Tư vấn hoa quả, dinh dưỡng, cách bảo quản và hướng dẫn đặt mua. "
                 "Thông tin sản phẩm đang có tại cửa hàng:\n"
                 + products_info

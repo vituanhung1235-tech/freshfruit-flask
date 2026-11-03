@@ -15,9 +15,9 @@
 		<div><small>Doanh thu bán tại quầy</small><h2>{{money(stats.pos_revenue)}}</h2><small>{{stats.pos_sales}} phiếu bán</small></div>
 	</div>
 	<nav class="ops-links" aria-label="Công việc vận hành">
-		<a href="{{url_for('point_of_sale')}}">🧾 Bán tại quầy</a>
-		<a href="{{url_for('packing_queue')}}">📦 Hàng đợi đóng gói</a>
-		{% if user_role == 'admin' %}<a href="{{url_for('staff_management')}}">👥 Nhân sự & phân quyền</a>{% endif %}
+		<a href="{{url_for('point_of_sale')}}">Bán tại quầy</a>
+		<a href="{{url_for('packing_queue')}}">Hàng đợi đóng gói</a>
+		{% if user_role == 'admin' %}<a href="{{url_for('staff_management')}}">Nhân sự & phân quyền</a>{% endif %}
 	</nav>
 	<section class="panel admin-section">
 		<div class="section-heading"><div><span class="eyebrow">KÊNH OFFLINE</span><h2>Phiếu bán tại quầy gần đây</h2></div><a href="{{url_for('point_of_sale')}}">Mở quầy bán →</a></div>
@@ -37,7 +37,6 @@
 			<label>Giá (VND)<input name="price" type="number" min="0" placeholder="89000" required></label>
 			<label>Đơn vị<input name="unit" placeholder="kg" value="kg" required></label>
 			<label>Tồn kho<input name="stock" type="number" min="0" placeholder="0" required></label>
-			<label>Emoji<input name="emoji" value="🍎" maxlength="10"></label>
 			<label>Ảnh sản phẩm (JPG, PNG, WebP; tối đa 1 MB)<input type="file" name="image" accept="image/jpeg,image/png,image/webp"></label>
 			<label class="admin-form-wide">Mô tả<textarea name="description" rows="3">Hoa quả tươi ngon</textarea></label>
 			<div class="admin-form-actions admin-form-wide">
@@ -52,13 +51,13 @@
 					{% for p in products %}
 					<tr id="product-{{p.id}}">
 						<td>{{p.id}}</td>
-						<td>{% if p.image %}<img src="{{product_image_src(p)}}" alt="{{p.name}}" style="width:45px;height:45px;object-fit:cover;border-radius:8px;vertical-align:middle;">{% else %}<span style="font-size:24px;">{{p.emoji}}</span>{% endif %}</td>
+						<td><img src="{{product_image_src(p)}}" alt="{{p.name}}" style="width:45px;height:45px;object-fit:cover;border-radius:8px;vertical-align:middle;" onerror="this.onerror=null;this.src='/static/images/hero_fruits.jpg';"></td>
 						<td><strong>{{p.name}}</strong><br><small class="muted">{{p.category}}</small></td>
 						<td>{{money(p.price)}}</td>
 						<td>{{p.stock}}</td>
 						<td>{{'Có' if p.active else 'Ẩn'}}</td>
 						<td>
-							<button type="button" data-edit-product data-id="{{p.id}}" data-name="{{p.name}}" data-category="{{p.category}}" data-price="{{p.price}}" data-unit="{{p.unit}}" data-stock="{{p.stock}}" data-emoji="{{p.emoji}}" data-description="{{p.description}}">Sửa</button>
+							<button type="button" data-edit-product data-id="{{p.id}}" data-name="{{p.name}}" data-category="{{p.category}}" data-price="{{p.price}}" data-unit="{{p.unit}}" data-stock="{{p.stock}}" data-description="{{p.description}}">Sửa</button>
 							<form method="post" action="{{url_for('admin_product_toggle',pid=p.id)}}">
 								<input type="hidden" name="_csrf" value="{{csrf_token()}}">
 								<button>{{'Ngừng bán' if p.active else 'Hiện lại'}}</button>
@@ -115,7 +114,7 @@
 	document.querySelectorAll('[data-edit-product]').forEach((button) => {
 		button.addEventListener('click', () => {
 			idField.value = button.dataset.id;
-			for (const field of ['name', 'category', 'price', 'unit', 'stock', 'emoji', 'description']) {
+			for (const field of ['name', 'category', 'price', 'unit', 'stock', 'description']) {
 				form.elements[field].value = button.dataset[field] || '';
 			}
 			submit.textContent = 'Lưu thay đổi';

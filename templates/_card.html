@@ -1,22 +1,17 @@
 <div class="product-card">
   <div class="card-badge-wrap">
-    <span class="badge-fresh">🌿 Tươi mới</span>
+    <span class="badge-fresh">Tươi mới</span>
     {% if p.category == 'Nhập khẩu' %}
-      <span class="badge-imported">✈️ Nhập khẩu</span>
+      <span class="badge-imported">Nhập khẩu</span>
     {% endif %}
   </div>
   <a href="{{url_for('product',pid=p.id)}}" class="fruit-visual">
-    {% if p.image %}
-      <img src="{{product_image_src(p)}}" alt="{{p.name}}" class="fruit-img" loading="lazy" onerror="this.style.display='none';this.nextElementSibling.style.display='inline-block';">
-      <span class="fruit-fallback" style="display:none;">{{p.emoji}}</span>
-    {% else %}
-      <span>{{p.emoji}}</span>
-    {% endif %}
+    <img src="{{product_image_src(p)}}" alt="{{p.name}}" class="fruit-img" loading="lazy" onerror="this.onerror=null;this.src='/static/images/hero_fruits.jpg';">
   </a>
   <div class="card-body">
     <div class="card-meta-top">
       <small class="card-cat">{{p.category}}</small>
-      <span class="card-rating">⭐⭐⭐⭐⭐</span>
+      <span class="card-rating">Chọn lọc</span>
     </div>
     <a class="prod-name" href="{{url_for('product',pid=p.id)}}" title="{{p.name}}">{{p.name}}</a>
     <div class="price-box">

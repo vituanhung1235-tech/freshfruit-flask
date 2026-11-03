@@ -9,7 +9,7 @@
   </div>
 
   <div class="filter-chips-wrap" style="margin-bottom: 25px;">
-    <a class="chip {{'active' if not category else ''}}" href="{{url_for('products', q=q)}}">✨ Tất cả ({{products|length}})</a>
+    <a class="chip {{'active' if not category else ''}}" href="{{url_for('products', q=q)}}">Tất cả ({{products|length}})</a>
     {% for cat in categories %}
       <a class="chip {{'active' if category==cat else ''}}" href="{{url_for('products', category=cat, q=q)}}">{{cat}}</a>
     {% endfor %}
@@ -26,7 +26,6 @@
       {% include '_card.html' %}
     {% else %}
       <div style="grid-column: 1 / -1; text-align: center; padding: 60px 20px; background: #fff; border-radius: 16px; border: 1px dashed var(--line);">
-        <div style="font-size: 50px; margin-bottom: 12px;">🍎</div>
         <h3>Không tìm thấy sản phẩm phù hợp</h3>
         <p style="color: var(--text-muted); margin: 8px 0 20px;">Vui lòng thử tìm kiếm với từ khóa khác hoặc chọn xem tất cả sản phẩm.</p>
         <a href="{{url_for('products')}}" class="cta">Xem tất cả trái cây</a>

@@ -18,8 +18,8 @@
     <div class="container top-bar-content">
       <div class="top-socials">
         <a href="https://facebook.com" target="_blank" title="Facebook" aria-label="Facebook">f</a>
-        <a href="https://instagram.com" target="_blank" title="Instagram" aria-label="Instagram">📸</a>
-        <a href="https://tiktok.com" target="_blank" title="TikTok" aria-label="TikTok">🎵</a>
+        <a href="https://instagram.com" target="_blank" title="Instagram" aria-label="Instagram">IG</a>
+        <a href="https://tiktok.com" target="_blank" title="TikTok" aria-label="TikTok">TikTok</a>
         <a href="https://youtube.com" target="_blank" title="YouTube" aria-label="YouTube">▶</a>
       </div>
 
@@ -37,9 +37,9 @@
       </form>
 
       <div class="top-contacts">
-        <span class="top-time">⏰ 06:30 - 22:00</span>
+        <span class="top-time">06:30 - 22:00</span>
         <span class="top-divider">|</span>
-        <a href="tel:0365107387" class="top-hotline">📞 HOTLINE: <strong>0365 107 387</strong></a>
+        <a href="tel:0365107387" class="top-hotline">HOTLINE: <strong>0365 107 387</strong></a>
       </div>
     </div>
   </div>
@@ -68,21 +68,21 @@
       <div class="header-user-actions">
         {% if current_user %}
           <div class="user-dropdown-wrap">
-            <a href="{{url_for('profile')}}" class="user-greeting">👤 {{current_user}}</a>
+            <a href="{{url_for('profile')}}" class="user-greeting">{{current_user}}</a>
             <div class="user-menu-pop">
-              <a href="{{url_for('orders')}}">📦 Đơn hàng của tôi</a>
-              <a href="{{url_for('profile')}}">⚙️ Hồ sơ cá nhân</a>
+              <a href="{{url_for('orders')}}">Đơn hàng của tôi</a>
+              <a href="{{url_for('profile')}}">Hồ sơ cá nhân</a>
               {% if is_admin %}
-                <a href="{{url_for('admin')}}" class="admin-link">👑 Quản trị hệ thống</a>
+                <a href="{{url_for('admin')}}" class="admin-link">Quản trị hệ thống</a>
               {% endif %}
               {% if user_role == 'admin' %}
-                <a href="{{url_for('staff_management')}}">👥 Nhân sự & phân quyền</a>
+                <a href="{{url_for('staff_management')}}">Nhân sự & phân quyền</a>
               {% endif %}
               {% if user_role in ['admin', 'manager', 'cashier'] %}
-                <a href="{{url_for('point_of_sale')}}">🧾 Bán tại quầy</a>
+                <a href="{{url_for('point_of_sale')}}">Bán tại quầy</a>
               {% endif %}
               {% if user_role in ['admin', 'manager', 'packer'] %}
-                <a href="{{url_for('packing_queue')}}">📦 Hàng đợi đóng gói</a>
+                <a href="{{url_for('packing_queue')}}">Hàng đợi đóng gói</a>
               {% endif %}
               <form method="post" action="{{url_for('logout')}}" class="logout-form">
                 <input type="hidden" name="_csrf" value="{{csrf_token()}}">
@@ -96,12 +96,24 @@
         {% endif %}
 
         <a href="{{url_for('cart')}}" class="header-cart-btn" title="Giỏ hàng">
-          <span class="cart-icon">🛒</span>
+          <span class="cart-icon" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 4h2l2.2 11.2a2 2 0 0 0 2 1.6h8.7a2 2 0 0 0 1.9-1.4L22 9H6"></path><circle cx="10" cy="21" r="1"></circle><circle cx="18" cy="21" r="1"></circle></svg>
+          </span>
           <span class="cart-badge">{{cart_count}}</span>
         </a>
       </div>
     </div>
   </header>
+
+  {% if staff_access_active %}
+    <div class="staff-access-banner" role="status">
+      <span>Đang truy cập với quyền nhân viên: <strong>{{current_user}}</strong> · {{staff_access_role}}</span>
+      <form method="post" action="{{url_for('return_from_staff_access')}}">
+        <input type="hidden" name="_csrf" value="{{csrf_token()}}">
+        <button type="submit">Quay lại admin</button>
+      </form>
+    </div>
+  {% endif %}
 
   <!-- Flash messages -->
   <div class="container message-container">
@@ -132,10 +144,10 @@
           <strong>Tuấn Hùng Fruit</strong> tự hào là hệ thống chuỗi cửa hàng hoa quả nhập khẩu và trái cây đặc sản vùng miền uy tín số 1 Việt Nam. Cam kết 100% trái cây tươi sạch, kiểm định nghiêm ngặt theo chuẩn VietGAP & GlobalGAP.
         </p>
         <div class="footer-contact-list">
-          <div>📍 Trụ sở chính: Số 88 Đại Lộ Xanh, Hà Nội</div>
-          <div>📞 Hotline đặt hàng: <strong>0365 107 387</strong></div>
-          <div>🌐 Website: <a href="https://freshfruit-shop.vercel.app">freshfruit-shop.vercel.app</a></div>
-          <div>🕒 Giờ mở cửa: 06:30 - 22:00 tất cả các ngày</div>
+          <div>Trụ sở chính: Số 88 Đại Lộ Xanh, Hà Nội</div>
+          <div>Hotline đặt hàng: <strong>0365 107 387</strong></div>
+          <div>Website: <a href="https://freshfruit-shop.vercel.app">freshfruit-shop.vercel.app</a></div>
+          <div>Giờ mở cửa: 06:30 - 22:00 tất cả các ngày</div>
         </div>
       </div>
 
@@ -165,9 +177,9 @@
         <h3>CHỨNG NHẬN & CAM KẾT</h3>
         <p class="footer-subtext">Tuấn Hùng Fruit cam kết bồi thường 200% nếu phát hiện trái cây tẩm ướp hóa chất độc hại.</p>
         <div class="trust-badges">
-          <span class="trust-badge">🌿 100% Organic</span>
-          <span class="trust-badge">🛡️ GlobalGAP</span>
-          <span class="trust-badge">⚡ Giao 2 Giờ</span>
+          <span class="trust-badge">100% Organic</span>
+          <span class="trust-badge">GlobalGAP</span>
+          <span class="trust-badge">Giao 2 Giờ</span>
         </div>
         <div class="promo-box-mini" id="khuyen-mai">
           <small>MÃ ƯU ĐÃI HIỆN CÓ:</small>
@@ -196,7 +208,7 @@
   <div class="floating-contact-left">
     <a href="tel:0365107387" class="float-btn float-phone" title="Gọi Hotline 0365 107 387" aria-label="Gọi ngay">
       <span class="pulse-ring"></span>
-      <span class="float-icon">📞</span>
+      <span class="float-icon" aria-hidden="true"></span>
     </a>
     <a href="https://zalo.me/0365107387" target="_blank" class="float-btn float-zalo" title="Chat Zalo" aria-label="Zalo">
       <span class="float-zalo-text">Zalo</span>
@@ -205,13 +217,13 @@
 
   <!-- Floating Chatbot on Bottom Right -->
   <button id="chat-toggle" aria-label="Mở trợ lý ảo Tuấn Hùng AI">
-    💬 <span>Hỏi Tuấn Hùng AI</span>
+    <span>Hỏi Tuấn Hùng AI</span>
   </button>
 
   <section id="chatbox" class="chatbox" hidden>
     <div class="chathead">
       <div class="chathead-title">
-        <span class="bot-avatar">🤖</span>
+        <span class="bot-avatar">AI</span>
         <div>
           <strong>Tuấn Hùng AI</strong>
           <small>Trợ lý hoa quả thông minh</small>
@@ -221,14 +233,14 @@
     </div>
 
     <div class="chat-quick-suggestions">
-      <button type="button" class="quick-chip" onclick="sendQuickQuery('giá dưa hấu bao nhiêu')">🍉 Giá dưa hấu</button>
-      <button type="button" class="quick-chip" onclick="sendQuickQuery('có mã giảm giá nào không')">🎁 Mã giảm giá</button>
-      <button type="button" class="quick-chip" onclick="sendQuickQuery('tư vấn hoa quả nhiều vitamin C')">🍊 Tăng đề kháng</button>
+      <button type="button" class="quick-chip" onclick="sendQuickQuery('giá dưa hấu bao nhiêu')">Giá dưa hấu</button>
+      <button type="button" class="quick-chip" onclick="sendQuickQuery('có mã giảm giá nào không')">Mã giảm giá</button>
+      <button type="button" class="quick-chip" onclick="sendQuickQuery('tư vấn hoa quả nhiều vitamin C')">Tăng đề kháng</button>
     </div>
 
     <div id="chat-messages" class="chatmsgs">
       <div class="bubble bot">
-        Xin chào! Mình là <strong>Tuấn Hùng AI</strong> 🍃. Bạn đang tìm mua loại hoa quả nào, cần báo giá hay tư vấn giỏ quà tặng ạ?
+        Xin chào! Mình là <strong>Tuấn Hùng AI</strong>. Bạn đang tìm mua loại hoa quả nào, cần báo giá hay tư vấn giỏ quà tặng ạ?
       </div>
     </div>
 

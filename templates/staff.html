@@ -5,7 +5,7 @@
   <div class="page-head">
     <span class="eyebrow">QUẢN TRỊ · NHÂN SỰ</span>
     <h1>Nhân sự & phân quyền</h1>
-    <p class="section-sub">Chỉ admin được tạo tài khoản và phân vai trò. Mỗi nhân viên chỉ được phép thao tác trong phạm vi công việc.</p>
+    <p class="section-sub">Chỉ admin được tạo tài khoản và phân vai trò. Mỗi nhân viên chỉ được phép thao tác trong phạm vi công việc. Truy cập thay mặt nhân viên sẽ được lưu nhật ký.</p>
   </div>
   <div class="staff-role-grid">
     <article class="panel"><span class="eyebrow">01 · ĐIỀU PHỐI</span><h2>Quản lý</h2><p>Quản lý sản phẩm, giá, tồn kho; xác nhận đơn online; theo dõi doanh thu và điều phối vận hành.</p></article>
@@ -28,8 +28,28 @@
     <h2>Tài khoản nhân viên</h2>
     <div class="tablewrap"><table><thead><tr><th>Nhân viên</th><th>Email</th><th>Vai trò</th></tr></thead><tbody>
       {% for person in staff %}
-      <tr><td>{{person.name}}</td><td>{{person.email}}</td><td>{{{'manager':'Quản lý','cashier':'Thu ngân','packer':'Đóng gói'}.get(person.role, person.role)}}</td></tr>
+      <tr>
+        <td>
+          <div class="staff-person-cell">
+            <strong>{{person.name}}</strong>
+            <form method="post" action="{{url_for('admin_staff_access',staff_id=person.id)}}">
+              <input type="hidden" name="_csrf" value="{{csrf_token()}}">
+              <button type="submit" class="staff-access-button" title="Mở website theo quyền của nhân viên này">Truy cập quyền này</button>
+            </form>
+          </div>
+        </td>
+        <td>{{person.email}}</td>
+        <td>{{{'manager':'Quản lý','cashier':'Thu ngân','packer':'Đóng gói'}.get(person.role, person.role)}}</td>
+      </tr>
       {% else %}<tr><td colspan="3">Chưa có tài khoản nhân viên.</td></tr>{% endfor %}
+    </tbody></table></div>
+  </section>
+  <section class="panel admin-section">
+    <h2>Nhật ký truy cập tài khoản nhân viên</h2>
+    <div class="tablewrap"><table><thead><tr><th>Admin</th><th>Tài khoản nhân viên</th><th>Bắt đầu</th><th>Kết thúc</th></tr></thead><tbody>
+      {% for access in access_history %}
+      <tr><td>{{access.admin_name}}</td><td>{{access.staff_name}} · {{access.staff_email}}</td><td>{{access.started_at[:16]}}</td><td>{{access.ended_at[:16] if access.ended_at else 'Đang hoạt động'}}</td></tr>
+      {% else %}<tr><td colspan="4">Chưa có lượt truy cập tài khoản nhân viên.</td></tr>{% endfor %}
     </tbody></table></div>
   </section>
 </div>
