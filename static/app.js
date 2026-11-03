@@ -131,6 +131,147 @@
   });
 })();
 
+// Product search suggestions are loaded from the active catalog as the user types.
+(function initProductSearch() {
+  const form = document.querySelector('.top-search');
+  if (!form) return;
+
+  const input = form.querySelector('input[name="q"]');
+  const list = form.querySelector('#product-search-suggestions');
+  if (!input || !list) return;
+
+  const endpoint = form.dataset.suggestionsUrl;
+  let debounceTimer = null;
+  let requestController = null;
+  let suggestions = [];
+  let activeIndex = -1;
+
+  function closeSuggestions() {
+    list.hidden = true;
+    list.replaceChildren();
+    input.setAttribute('aria-expanded', 'false');
+    input.removeAttribute('aria-activedescendant');
+    activeIndex = -1;
+  }
+
+  function renderSuggestions(items, message) {
+    list.replaceChildren();
+    suggestions = items;
+    activeIndex = -1;
+
+    if (message) {
+      const status = document.createElement('div');
+      status.className = 'search-suggestion-message';
+      status.setAttribute('role', 'status');
+      status.textContent = message;
+      list.appendChild(status);
+    } else {
+      items.forEach((item, index) => {
+        const link = document.createElement('a');
+        link.className = 'search-suggestion';
+        link.id = `product-search-option-${index}`;
+        link.href = item.url;
+        link.setAttribute('role', 'option');
+        link.setAttribute('aria-selected', 'false');
+
+        const emoji = document.createElement('span');
+        emoji.className = 'search-suggestion-emoji';
+        emoji.textContent = item.emoji || '🍎';
+        const details = document.createElement('span');
+        details.className = 'search-suggestion-details';
+        const name = document.createElement('strong');
+        name.textContent = item.name;
+        const category = document.createElement('small');
+        category.textContent = item.category;
+        details.append(name, category);
+        link.append(emoji, details);
+        list.appendChild(link);
+      });
+    }
+
+    list.hidden = false;
+    input.setAttribute('aria-expanded', 'true');
+  }
+
+  function setActiveSuggestion(index) {
+    const options = list.querySelectorAll('[role="option"]');
+    if (!options.length) return;
+    activeIndex = (index + options.length) % options.length;
+    options.forEach((option, optionIndex) => {
+      option.setAttribute('aria-selected', String(optionIndex === activeIndex));
+    });
+    input.setAttribute('aria-activedescendant', options[activeIndex].id);
+  }
+
+  input.addEventListener('input', () => {
+    clearTimeout(debounceTimer);
+    if (requestController) requestController.abort();
+
+    const query = input.value.trim();
+    if (!query) {
+      closeSuggestions();
+      return;
+    }
+
+    debounceTimer = setTimeout(async () => {
+      requestController = new AbortController();
+      try {
+        const response = await fetch(`${endpoint}?q=${encodeURIComponent(query)}`, {
+          signal: requestController.signal
+        });
+        if (!response.ok) throw new Error('Không thể tải gợi ý tìm kiếm.');
+        const items = await response.json();
+        renderSuggestions(items, items.length ? '' : 'Chưa tìm thấy sản phẩm phù hợp.');
+      } catch (error) {
+        if (error.name === 'AbortError') return;
+        renderSuggestions([], 'Không thể tải gợi ý. Bạn vẫn có thể nhấn Enter để tìm kiếm.');
+      }
+    }, 120);
+  });
+
+  input.addEventListener('keydown', event => {
+    if (list.hidden) return;
+    if (event.key === 'ArrowDown') {
+      event.preventDefault();
+      setActiveSuggestion(activeIndex + 1);
+    } else if (event.key === 'ArrowUp') {
+      event.preventDefault();
+      setActiveSuggestion(activeIndex < 0 ? suggestions.length - 1 : activeIndex - 1);
+    } else if (event.key === 'Enter' && activeIndex >= 0) {
+      event.preventDefault();
+      list.querySelectorAll('[role="option"]')[activeIndex].click();
+    } else if (event.key === 'Escape') {
+      closeSuggestions();
+    }
+  });
+
+  document.addEventListener('click', event => {
+    if (!form.contains(event.target)) closeSuggestions();
+  });
+})();
+
+// Keep the checkout preview in sync; the server recalculates the final total.
+(function initCheckoutDiscount() {
+  const form = document.getElementById('checkout-form');
+  if (!form) return;
+
+  const coupon = document.getElementById('checkout-coupon');
+  const totalRow = document.querySelector('.checkout-total-row');
+  const discountAmount = document.getElementById('checkout-discount');
+  const totalAmount = document.getElementById('checkout-total');
+  if (!coupon || !totalRow || !discountAmount || !totalAmount) return;
+
+  const subtotal = Number(totalRow.dataset.subtotal);
+  const formatter = new Intl.NumberFormat('vi-VN', { maximumFractionDigits: 0 });
+
+  coupon.addEventListener('change', () => {
+    const percent = Number(coupon.selectedOptions[0].dataset.discount) || 0;
+    const discount = Math.floor(subtotal * percent / 100);
+    discountAmount.textContent = '-' + formatter.format(discount) + 'đ';
+    totalAmount.textContent = formatter.format(subtotal - discount) + 'đ';
+  });
+})();
+
 // 2. CHATBOT TUẤN HÙNG AI
 const toggle = document.getElementById('chat-toggle');
 const chat = document.getElementById('chatbox');

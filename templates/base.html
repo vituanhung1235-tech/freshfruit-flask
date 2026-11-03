@@ -4,11 +4,12 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="csrf-token" content="{{ csrf_token() }}">
+  <link rel="canonical" href="https://freshfruit-shop.vercel.app{{request.path}}">
   <title>{% block title %}Trang chủ{% endblock %} | Tuấn Hùng Fruit - Hoa Quả Nhập Khẩu & Tươi Sạch</title>
   <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-  <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,700;0,800;1,700&display=swap" rel="stylesheet">
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
 </head>
 <body>
 
@@ -22,11 +23,14 @@
         <a href="https://youtube.com" target="_blank" title="YouTube" aria-label="YouTube">▶</a>
       </div>
 
-      <form class="top-search" action="{{url_for('products')}}" method="get">
+      <form class="top-search" action="{{url_for('products')}}" method="get" data-suggestions-url="{{url_for('product_suggestions')}}">
         <div class="search-category-pill">
           <span>Tất cả</span>
         </div>
-        <input name="q" placeholder="Tìm kiếm sản phẩm táo, cam, nho, dâu..." value="{{request.args.get('q','') if request.endpoint=='products' else ''}}">
+        <div class="search-input-wrap">
+          <input name="q" placeholder="Tìm táo, cam, nho..." value="{{request.args.get('q','') if request.endpoint=='products' else ''}}" autocomplete="off" role="combobox" aria-autocomplete="list" aria-controls="product-search-suggestions" aria-expanded="false">
+          <div class="search-suggestions" id="product-search-suggestions" role="listbox" hidden></div>
+        </div>
         <button type="submit" aria-label="Tìm kiếm">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
         </button>
@@ -35,7 +39,7 @@
       <div class="top-contacts">
         <span class="top-time">⏰ 06:30 - 22:00</span>
         <span class="top-divider">|</span>
-        <a href="tel:0862552155" class="top-hotline">📞 HOTLINE: <strong>0862 552 155</strong></a>
+        <a href="tel:0365107387" class="top-hotline">📞 HOTLINE: <strong>0365 107 387</strong></a>
       </div>
     </div>
   </div>
@@ -44,7 +48,7 @@
   <header class="main-header">
     <div class="container header-inner">
       <a href="{{url_for('home')}}" class="brand-logo">
-        <div class="logo-icon">🍎</div>
+        <img class="logo-image" src="{{url_for('static', filename='images/tuanhung-fruit-logo.webp')}}" alt="Tuấn Hùng Fruit">
         <div class="logo-text-wrap">
           <div class="logo-brand">Tuấn Hùng <span>Fruit</span></div>
           <small class="logo-slogan">good fruit, good life</small>
@@ -118,7 +122,7 @@
     <div class="container footer-grid">
       <div class="footer-col brand-col">
         <div class="brand-logo footer-logo">
-          <div class="logo-icon">🍎</div>
+          <img class="logo-image" src="{{url_for('static', filename='images/tuanhung-fruit-logo.webp')}}" alt="Tuấn Hùng Fruit">
           <div class="logo-text-wrap">
             <div class="logo-brand">Tuấn Hùng <span>Fruit</span></div>
             <small class="logo-slogan">good fruit, good life</small>
@@ -129,8 +133,8 @@
         </p>
         <div class="footer-contact-list">
           <div>📍 Trụ sở chính: Số 88 Đại Lộ Xanh, Hà Nội</div>
-          <div>📞 Hotline đặt hàng: <strong>0862 552 155</strong></div>
-          <div>✉️ Email: contact@tuanhungfruit.vn</div>
+          <div>📞 Hotline đặt hàng: <strong>0365 107 387</strong></div>
+          <div>🌐 Website: <a href="https://freshfruit-shop.vercel.app">freshfruit-shop.vercel.app</a></div>
           <div>🕒 Giờ mở cửa: 06:30 - 22:00 tất cả các ngày</div>
         </div>
       </div>
@@ -167,7 +171,11 @@
         </div>
         <div class="promo-box-mini" id="khuyen-mai">
           <small>MÃ ƯU ĐÃI HIỆN CÓ:</small>
-          <strong>FRESH10 (Giảm 10%)</strong>
+          {% for coupon in available_coupons %}
+            <strong>{{coupon.code}} (Giảm {{coupon.discount_percent}}%)</strong>
+          {% else %}
+            <span>Hiện chưa có mã giảm giá.</span>
+          {% endfor %}
           <span>Áp dụng khi thanh toán</span>
         </div>
       </div>
@@ -178,6 +186,7 @@
         <div>© 2026 Tuấn Hùng Fruit. All Rights Reserved. Trao gửi chất lượng thật - Kiến tạo niềm tin bền vững.</div>
         <div class="footer-social-bottom">
           <a href="#">Facebook</a> · <a href="#">Zalo</a> · <a href="#">TikTok</a>
+          · <a href="{{url_for('image_credits')}}">Nguồn ảnh</a>
         </div>
       </div>
     </div>
@@ -185,11 +194,11 @@
 
   <!-- Floating Call & Zalo widgets on Bottom Left (As in reference image) -->
   <div class="floating-contact-left">
-    <a href="tel:0862552155" class="float-btn float-phone" title="Gọi Hotline 0862 552 155" aria-label="Gọi ngay">
+    <a href="tel:0365107387" class="float-btn float-phone" title="Gọi Hotline 0365 107 387" aria-label="Gọi ngay">
       <span class="pulse-ring"></span>
       <span class="float-icon">📞</span>
     </a>
-    <a href="https://zalo.me/0862552155" target="_blank" class="float-btn float-zalo" title="Chat Zalo" aria-label="Zalo">
+    <a href="https://zalo.me/0365107387" target="_blank" class="float-btn float-zalo" title="Chat Zalo" aria-label="Zalo">
       <span class="float-zalo-text">Zalo</span>
     </a>
   </div>

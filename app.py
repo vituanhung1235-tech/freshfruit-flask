@@ -69,6 +69,112 @@ PRODUCTS = [
     ('Giỏ quà trái cây', 'Giỏ quà', 399000, 'giỏ', 'Giỏ quà thiết kế sang trọng, kết hợp các loại trái cây cao cấp tươi ngon trong ngày.', '🎁', '/static/images/giftbasket.jpg', 18),
 ]
 
+NORTHERN_PRODUCTS = [
+    ('Vải thiều Lục Ngạn', 'Việt Nam', 85000, 'kg', 'Vải thiều Lục Ngạn cùi dày, thơm ngọt, đặc sản Bắc Giang vào mùa hè.', '🍒', '/static/images/fruit-lychee.jpg', 35),
+    ('Nhãn lồng Hưng Yên', 'Việt Nam', 75000, 'kg', 'Nhãn lồng Hưng Yên hạt nhỏ, cùi dày và vị ngọt đậm đặc trưng.', '🍈', '/static/images/fruit-longan.jpg', 30),
+    ('Cam Cao Phong Hòa Bình', 'Việt Nam', 55000, 'kg', 'Cam Cao Phong mọng nước, vị ngọt dịu, được trồng tại vùng đồi Hòa Bình.', '🍊', '/static/images/fruit-orange.jpg', 40),
+    ('Bưởi Diễn Hà Nội', 'Việt Nam', 65000, 'quả', 'Bưởi Diễn thơm nhẹ, tép ráo và ngọt đậm, đặc sản nổi tiếng của Hà Nội.', '🍊', '/static/images/fruit-grapefruit.jpg', 28),
+    ('Hồng không hạt Bắc Kạn', 'Việt Nam', 69000, 'kg', 'Hồng không hạt Bắc Kạn giòn ngọt, đặc sản vùng núi phía Bắc vào mùa thu.', '🍅', '/static/images/fruit-persimmon.jpg', 24),
+    ('Mận hậu Sơn La', 'Theo mùa', 59000, 'kg', 'Mận hậu Sơn La giòn chua ngọt, quả tươi theo mùa từ vùng cao Tây Bắc.', '🍑', '/static/images/fruit-plum.jpg', 32),
+    ('Đào Sa Pa Lào Cai', 'Theo mùa', 89000, 'kg', 'Đào Sa Pa thơm dịu, vị ngọt thanh, được thu hoạch theo mùa ở vùng núi cao.', '🍑', '/static/images/fruit-peach.jpg', 22),
+    ('Dâu tây Mộc Châu', 'Theo mùa', 125000, 'hộp', 'Dâu tây Mộc Châu đỏ mọng, thơm ngọt, trồng tại cao nguyên Sơn La.', '🍓', '/static/images/fruit-strawberry.jpg', 26),
+    ('Lê Bắc Hà Lào Cai', 'Theo mùa', 78000, 'kg', 'Lê Bắc Hà giòn mọng nước, vị ngọt mát, đặc sản theo mùa của Lào Cai.', '🍐', '/static/images/fruit-pear.png', 25),
+    ('Quýt Bắc Sơn Lạng Sơn', 'Theo mùa', 62000, 'kg', 'Quýt Bắc Sơn thơm tinh dầu, ngọt thanh và được thu hoạch vào mùa đông.', '🍊', '/static/images/fruit-mandarin.jpg', 30),
+]
+
+SEED_PRODUCTS = PRODUCTS + NORTHERN_PRODUCTS
+
+DEFAULT_COUPONS = [
+    ('FRESH10', 10),
+    ('WELCOME5', 5),
+    ('FRUIT12', 12),
+    ('VUONMUA15', 15),
+    ('TUANHUNG20', 20),
+]
+
+IMAGE_CREDITS = [
+    {
+        'name': 'Vải thiều Lục Ngạn',
+        'file': 'Lychee fruits and seed.jpg',
+        'artist': 'Ivar Leidus',
+        'license': 'CC BY-SA 4.0',
+        'license_url': 'https://creativecommons.org/licenses/by-sa/4.0/',
+        'source_url': 'https://commons.wikimedia.org/wiki/File:Lychee_fruits_and_seed.jpg',
+    },
+    {
+        'name': 'Nhãn lồng Hưng Yên',
+        'file': 'Longan fruit flesh & skin.jpg',
+        'artist': 'Zenyrgarden',
+        'license': 'CC BY-SA 4.0',
+        'license_url': 'https://creativecommons.org/licenses/by-sa/4.0/',
+        'source_url': 'https://commons.wikimedia.org/wiki/File:Longan_fruit_flesh_%26_skin.jpg',
+    },
+    {
+        'name': 'Cam Cao Phong Hòa Bình',
+        'file': 'Oranges - whole-halved-segment.jpg',
+        'artist': 'Ivar Leidus',
+        'license': 'CC BY-SA 4.0',
+        'license_url': 'https://creativecommons.org/licenses/by-sa/4.0/',
+        'source_url': 'https://commons.wikimedia.org/wiki/File:Oranges_-_whole-halved-segment.jpg',
+    },
+    {
+        'name': 'Bưởi Diễn Hà Nội',
+        'file': 'Grapefruits - whole-halved-segments.jpg',
+        'artist': 'Ivar Leidus',
+        'license': 'CC BY-SA 4.0',
+        'license_url': 'https://creativecommons.org/licenses/by-sa/4.0/',
+        'source_url': 'https://commons.wikimedia.org/wiki/File:Grapefruits_-_whole-halved-segments.jpg',
+    },
+    {
+        'name': 'Mận hậu Sơn La',
+        'file': 'Plums on tree 2.jpg',
+        'artist': 'Natubico',
+        'license': 'CC BY-SA 4.0',
+        'license_url': 'https://creativecommons.org/licenses/by-sa/4.0/',
+        'source_url': 'https://commons.wikimedia.org/wiki/File:Plums_on_tree_2.jpg',
+    },
+    {
+        'name': 'Đào Sa Pa Lào Cai',
+        'file': 'Autumn Red peaches.jpg',
+        'artist': 'Jack Dykinga, USDA',
+        'license': 'Public domain',
+        'license_url': 'https://commons.wikimedia.org/wiki/Template:PD-USGov-USDA-ARS',
+        'source_url': 'https://commons.wikimedia.org/wiki/File:Autumn_Red_peaches.jpg',
+    },
+    {
+        'name': 'Dâu tây Mộc Châu',
+        'file': 'FraiseFruitPhoto.jpg',
+        'artist': 'FoeNyx',
+        'license': 'CC BY-SA 3.0',
+        'license_url': 'https://creativecommons.org/licenses/by-sa/3.0/',
+        'source_url': 'https://commons.wikimedia.org/wiki/File:FraiseFruitPhoto.jpg',
+    },
+    {
+        'name': 'Lê Bắc Hà Lào Cai',
+        'file': 'Golden Asian Pear 2.png',
+        'artist': 'TylerMascola',
+        'license': 'CC0',
+        'license_url': 'https://creativecommons.org/publicdomain/zero/1.0/',
+        'source_url': 'https://commons.wikimedia.org/wiki/File:Golden_Asian_Pear_2.png',
+    },
+    {
+        'name': 'Hồng không hạt Bắc Kạn',
+        'file': 'Fuyu persimmon fruits, one cut open.jpg',
+        'artist': 'Frank Schulenburg',
+        'license': 'CC BY-SA 4.0',
+        'license_url': 'https://creativecommons.org/licenses/by-sa/4.0/',
+        'source_url': 'https://commons.wikimedia.org/wiki/File:Fuyu_persimmon_fruits,_one_cut_open.jpg',
+    },
+    {
+        'name': 'Quýt Bắc Sơn Lạng Sơn',
+        'file': 'Mandarin Oranges (Citrus Reticulata).jpg',
+        'artist': 'Joe Ravi',
+        'license': 'CC BY-SA 3.0',
+        'license_url': 'https://creativecommons.org/licenses/by-sa/3.0/',
+        'source_url': 'https://commons.wikimedia.org/wiki/File:Mandarin_Oranges_(Citrus_Reticulata).jpg',
+    },
+]
+
 MAX_PRODUCT_IMAGE_BYTES = 1024 * 1024
 PRODUCT_IMAGE_MIME_TYPES = {
     'JPEG': 'image/jpeg',
@@ -133,13 +239,28 @@ def init_db():
         try:
             initialize_postgres_schema(conn)
             if not conn.execute('SELECT 1 FROM products LIMIT 1').fetchone():
-                for product in PRODUCTS:
+                for product in SEED_PRODUCTS:
                     conn.execute(
                         'INSERT INTO products(name, category, price, unit, description, emoji, image, stock) '
                         'VALUES(?,?,?,?,?,?,?,?)',
                         product,
                     )
-            conn.execute("INSERT OR IGNORE INTO coupons(code, discount_percent) VALUES('FRESH10', 10)")
+            else:
+                for product in NORTHERN_PRODUCTS:
+                    exists = conn.execute(
+                        'SELECT 1 FROM products WHERE name=?', (product[0],)
+                    ).fetchone()
+                    if not exists:
+                        conn.execute(
+                            'INSERT INTO products(name, category, price, unit, description, emoji, image, stock) '
+                            'VALUES(?,?,?,?,?,?,?,?)',
+                            product,
+                        )
+            for code, discount in DEFAULT_COUPONS:
+                conn.execute(
+                    'INSERT OR IGNORE INTO coupons(code, discount_percent) VALUES(?,?)',
+                    (code, discount),
+                )
             seed_admin(conn)
             conn.commit()
         except Exception:
@@ -168,25 +289,28 @@ def init_db():
     if 'image' not in cols:
         conn.execute("ALTER TABLE products ADD COLUMN image TEXT DEFAULT ''")
     if not conn.execute('SELECT 1 FROM products LIMIT 1').fetchone():
-        conn.executemany('INSERT INTO products(name, category, price, unit, description, emoji, image, stock) VALUES(?,?,?,?,?,?,?,?)', PRODUCTS)
+        conn.executemany(
+            'INSERT INTO products(name, category, price, unit, description, emoji, image, stock) VALUES(?,?,?,?,?,?,?,?)',
+            SEED_PRODUCTS,
+        )
     else:
-        fruit_images = {
-            'Táo Fuji Nhật Bản': '/static/images/apple.jpg',
-            'Cam vàng Úc': '/static/images/orange.jpg',
-            'Nho xanh không hạt': '/static/images/grapes.jpg',
-            'Dâu tây Đà Lạt': '/static/images/strawberry.jpg',
-            'Xoài cát Hòa Lộc': '/static/images/mango.jpg',
-            'Dưa hấu ruột đỏ': '/static/images/watermelon.jpg',
-            'Chuối già Nam Mỹ': '/static/images/banana.jpg',
-            'Dứa mật': '/static/images/pineapple.jpg',
-            'Kiwi xanh New Zealand': '/static/images/kiwi.jpg',
-            'Thanh long ruột đỏ': '/static/images/dragonfruit.jpg',
-            'Lê Hàn Quốc': '/static/images/pear.jpg',
-            'Giỏ quà trái cây': '/static/images/giftbasket.jpg',
-        }
-        for name, img in fruit_images.items():
+        for name, _, _, _, _, _, img, _ in PRODUCTS:
             conn.execute("UPDATE products SET image=? WHERE name=? AND (image IS NULL OR image='')", (img, name))
-    conn.execute("INSERT OR IGNORE INTO coupons(code, discount_percent) VALUES('FRESH10', 10)")
+        for product in NORTHERN_PRODUCTS:
+            exists = conn.execute(
+                'SELECT 1 FROM products WHERE name=?', (product[0],)
+            ).fetchone()
+            if not exists:
+                conn.execute(
+                    'INSERT INTO products(name, category, price, unit, description, emoji, image, stock) '
+                    'VALUES(?,?,?,?,?,?,?,?)',
+                    product,
+                )
+    for code, discount in DEFAULT_COUPONS:
+        conn.execute(
+            'INSERT OR IGNORE INTO coupons(code, discount_percent) VALUES(?,?)',
+            (code, discount),
+        )
     seed_admin(conn)
     conn.commit()
     conn.close()
@@ -239,6 +363,10 @@ def inject():
         'current_user': session.get('name'),
         'user_role': session.get('role', 'customer'),
         'is_admin': session.get('role') in ('admin', 'manager'),
+        'available_coupons': db().execute(
+            'SELECT code, discount_percent FROM coupons WHERE active=1 '
+            'ORDER BY discount_percent DESC, code'
+        ).fetchall(),
         'product_image_src': lambda product: (
             url_for('uploaded_product_image', pid=product['id'])
             if (product['image'] or '').startswith('data:image/')
@@ -331,6 +459,10 @@ def home():
     products = db().execute('SELECT * FROM products WHERE active=1 ORDER BY id DESC LIMIT 8').fetchall()
     return render_template('home.html', products=products)
 
+@app.get('/image-credits')
+def image_credits():
+    return render_template('image_credits.html', image_credits=IMAGE_CREDITS)
+
 @app.get('/products')
 def products():
     q = request.args.get('q', '').strip()[:80]
@@ -346,6 +478,37 @@ def products():
     query += ' ORDER BY id DESC'
     rows = db().execute(query, params).fetchall()
     return render_template('products.html', products=rows, q=q, category=category, categories=['Việt Nam', 'Nhập khẩu', 'Theo mùa', 'Giỏ quà'])
+
+@app.get('/api/product-suggestions')
+def product_suggestions():
+    query = request.args.get('q', '').strip()[:50]
+    if not query:
+        return jsonify([])
+
+    normalized_query = query.lower()
+    pattern = '%' + normalized_query + '%'
+    prefix = normalized_query + '%'
+    word_prefix = '% ' + normalized_query + '%'
+    position_expression = (
+        'POSITION(? IN lower(name))' if DATABASE_URL else 'instr(lower(name), ?)'
+    )
+    rows = db().execute(
+        'SELECT id, name, category, emoji FROM products '
+        'WHERE active=1 AND lower(name) LIKE ? '
+        'ORDER BY CASE WHEN lower(name) LIKE ? THEN 0 '
+        'WHEN lower(name) LIKE ? THEN 1 ELSE 2 END, '
+        + position_expression + ', name LIMIT 6',
+        (pattern, prefix, word_prefix, normalized_query),
+    ).fetchall()
+    return jsonify([
+        {
+            'name': row['name'],
+            'category': row['category'],
+            'emoji': row['emoji'],
+            'url': url_for('product', pid=row['id']),
+        }
+        for row in rows
+    ])
 
 @app.route('/product/<int:pid>', methods=['GET', 'POST'])
 def product(pid):
@@ -560,12 +723,14 @@ def checkout():
         flash('Giỏ hàng đang trống.', 'warning')
         return redirect(url_for('products'))
     user = db().execute('SELECT * FROM users WHERE id=?', (session['user_id'],)).fetchone()
+    selected_coupon = ''
     if request.method == 'POST':
         recipient = request.form.get('recipient', '').strip()[:100]
         phone = request.form.get('phone', '').strip()[:20]
         address = request.form.get('address', '').strip()[:300]
         note = request.form.get('note', '').strip()[:500]
         code = request.form.get('coupon', '').strip().upper()[:30]
+        selected_coupon = code
         if len(recipient) < 2 or len(phone) < 9 or len(address) < 8:
             flash('Vui lòng nhập đủ người nhận, số điện thoại, địa chỉ.', 'danger')
         else:
@@ -581,7 +746,10 @@ def checkout():
                 coupon = conn.execute('SELECT discount_percent FROM coupons WHERE code=? AND active=1', (code,)).fetchone() if code else None
                 if code and not coupon:
                     raise ValueError('Mã giảm giá không hợp lệ.')
-                total_price = subtotal * (100 - (coupon['discount_percent'] if coupon else 0)) // 100
+                discount_percent = coupon['discount_percent'] if coupon else 0
+                if not 0 <= discount_percent <= 100:
+                    raise ValueError('Mã giảm giá hiện không hợp lệ.')
+                total_price = subtotal * (100 - discount_percent) // 100
                 cur = conn.execute('INSERT INTO orders(user_id, recipient, phone, address, note, total, created_at) VALUES(?,?,?,?,?,?,?)', (session['user_id'], recipient, phone, address, note, total_price, datetime.now().isoformat(timespec='seconds')))
                 oid = cur.lastrowid
                 for r in latest:
@@ -593,7 +761,13 @@ def checkout():
             except (ValueError, *DB_ERROR_TYPES) as exc:
                 conn.rollback()
                 flash(str(exc), 'danger')
-    return render_template('checkout.html', rows=rows, total=total, user=user)
+    return render_template(
+        'checkout.html',
+        rows=rows,
+        total=total,
+        user=user,
+        selected_coupon=selected_coupon,
+    )
 
 @app.get('/orders')
 @login_required

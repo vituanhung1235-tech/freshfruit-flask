@@ -1,6 +1,6 @@
 # FreshFruit – Website bán hoa quả với Flask, SQLite và chatbot AI
 
-Website học tập hoàn chỉnh chạy trong VS Code: trang chủ, bộ lọc và tìm kiếm sản phẩm, đăng ký/đăng nhập, phân quyền Admin, giỏ hàng, đặt COD, quản lý đơn hàng, tồn kho, đánh giá, mã giảm giá FRESH10 và chatbot tư vấn.
+Website học tập hoàn chỉnh chạy trong VS Code: trang chủ, bộ lọc và tìm kiếm sản phẩm, đăng ký/đăng nhập, phân quyền Admin, giỏ hàng, đặt COD, quản lý đơn hàng, tồn kho, đánh giá, nhiều mã giảm giá và chatbot tư vấn.
 
 ## 1. Cài đặt và chạy (Windows – VS Code)
 
@@ -14,7 +14,7 @@ Copy-Item .env.example .env
 python app.py
 ```
 
-Mở **http://127.0.0.1:5000**. Lần đầu chạy tự khởi tạo `freshfruit.db` và 12 sản phẩm mẫu.
+Mở **http://127.0.0.1:5000**. Lần đầu chạy tự khởi tạo `freshfruit.db`, sản phẩm mẫu và 10 đặc sản hoa quả miền Bắc.
 
 Nếu PowerShell không cho kích hoạt virtual environment, chạy trực tiếp `.venv\Scripts\python.exe -m pip install -r requirements.txt` và `.venv\Scripts\python.exe app.py`.
 
@@ -48,7 +48,7 @@ Lấy API key từ https://platform.openai.com/api-keys. Tài khoản API thư�
 Trong `.env`, cấu hình SMTP và URL gốc của website:
 
 ```env
-APP_BASE_URL=https://ten-mien-cua-ban
+APP_BASE_URL=https://freshfruit-shop.vercel.app
 SMTP_HOST=smtp.gmail.com
 SMTP_PORT=587
 SMTP_USERNAME=email-gui-cua-ban@gmail.com

@@ -1,0 +1,24 @@
+{% extends 'base.html' %}
+{% block title %}Nguồn ảnh sản phẩm{% endblock %}
+{% block content %}
+<div class="container image-credits-page">
+  <div class="page-head">
+    <span class="eyebrow">MINH BẠCH NGUỒN ẢNH</span>
+    <h1>Nguồn ảnh hoa quả</h1>
+    <p class="section-sub">Ảnh minh họa loại quả, không xác nhận nguồn gốc của từng lô hàng. Ảnh lấy từ Wikimedia Commons và sử dụng theo giấy phép tương ứng.</p>
+  </div>
+  <div class="image-credits-list">
+    {% for credit in image_credits %}
+      <article class="panel image-credit">
+        <strong>{{credit.name}}</strong>
+        <span>{{credit.file}} · Ảnh: {{credit.artist}}</span>
+        <span>
+          Giấy phép:
+          <a href="{{credit.license_url}}" target="_blank" rel="noopener noreferrer">{{credit.license}}</a>
+        </span>
+        <a href="{{credit.source_url}}" target="_blank" rel="noopener noreferrer">Xem trang ảnh gốc tại Wikimedia Commons →</a>
+      </article>
+    {% endfor %}
+  </div>
+</div>
+{% endblock %}

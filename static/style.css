@@ -30,7 +30,7 @@
 }
 
 body {
-  font-family: 'Plus Jakarta Sans', Arial, sans-serif;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
   background-color: var(--bg-page);
   color: var(--text-dark);
   line-height: 1.6;
@@ -207,7 +207,7 @@ button {
 }
 
 .logo-brand {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
   font-size: 26px;
   font-weight: 800;
   color: #166a3a;
@@ -497,7 +497,7 @@ button {
 }
 
 .crest-text {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
   font-weight: 800;
   color: #176839;
   font-size: 15px;
@@ -513,7 +513,7 @@ button {
 
 /* 3D TITLE EXACTLY MATCHING USER SCREENSHOT */
 .banner-title-3d {
-  font-family: 'Playfair Display', 'Plus Jakarta Sans', Georgia, serif;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
   font-size: clamp(38px, 4.4vw, 64px);
   font-weight: 900;
   letter-spacing: -1px;
@@ -798,7 +798,7 @@ button {
 }
 
 .section-head h2 {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
   font-size: 32px;
   color: var(--text-dark);
   font-weight: 800;
@@ -1072,7 +1072,7 @@ button {
 }
 
 .promo-content h2 {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
   font-size: 34px;
   margin-bottom: 12px;
   color: #ffffff;
@@ -1188,7 +1188,7 @@ button {
 }
 
 .story-text h2 {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
   font-size: 32px;
   margin: 6px 0 16px;
   color: var(--text-dark);
@@ -1248,7 +1248,7 @@ button {
 }
 
 .detail h1 {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
   font-size: 38px;
   margin: 10px 0 15px;
   color: var(--text-dark);
@@ -1888,7 +1888,7 @@ td { padding: 12px 14px; border-bottom: 1px solid var(--line); }
 }
 
 body {
-  font-family: 'Plus Jakarta Sans', Arial, sans-serif;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
   background-color: var(--bg-page);
   color: var(--text-dark);
   line-height: 1.6;
@@ -2065,7 +2065,7 @@ button {
 }
 
 .logo-brand {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
   font-size: 26px;
   font-weight: 800;
   color: #166a3a;
@@ -2355,7 +2355,7 @@ button {
 }
 
 .crest-text {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
   font-weight: 800;
   color: #176839;
   font-size: 15px;
@@ -2371,7 +2371,7 @@ button {
 
 /* 3D TITLE EXACTLY MATCHING USER SCREENSHOT */
 .banner-title-3d {
-  font-family: 'Playfair Display', 'Plus Jakarta Sans', Georgia, serif;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
   font-size: clamp(38px, 4.4vw, 64px);
   font-weight: 900;
   letter-spacing: -1px;
@@ -2656,7 +2656,7 @@ button {
 }
 
 .section-head h2 {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
   font-size: 32px;
   color: var(--text-dark);
   font-weight: 800;
@@ -2930,7 +2930,7 @@ button {
 }
 
 .promo-content h2 {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
   font-size: 34px;
   margin-bottom: 12px;
   color: #ffffff;
@@ -3046,7 +3046,7 @@ button {
 }
 
 .story-text h2 {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
   font-size: 32px;
   margin: 6px 0 16px;
   color: var(--text-dark);
@@ -3106,7 +3106,7 @@ button {
 }
 
 .detail h1 {
-  font-family: 'Playfair Display', Georgia, serif;
+  font-family: 'Inter', 'Segoe UI', Arial, sans-serif;
   font-size: 38px;
   margin: 10px 0 15px;
   color: var(--text-dark);
@@ -3800,4 +3800,195 @@ td { padding: 12px 14px; border-bottom: 1px solid var(--line); }
   .cart-quantity-label input { width: 72px; min-height: 44px; font-size: 17px; }
   .cart-row .cart-line-total { grid-column: 3; min-width: auto; font-size: 20px; }
   .summary .cart-total { font-size: 26px; }
+}
+
+/* Polished inputs for the product editor and customer forms. */
+.admin-form {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 18px;
+  align-items: end;
+  margin-top: 24px;
+}
+
+.admin-form label,
+.form-panel label,
+.auth label {
+  display: grid;
+  gap: 8px;
+  color: #344b3b;
+  font-size: 13px;
+  font-weight: 700;
+}
+
+.admin-form input:not([type="hidden"]),
+.admin-form textarea,
+.form-panel input:not([type="hidden"]),
+.form-panel textarea,
+.auth input:not([type="hidden"]),
+.auth textarea,
+.status-form select {
+  width: 100%;
+  min-height: 48px;
+  padding: 11px 14px;
+  border: 1px solid #d5e2d8;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--text-dark);
+  font-size: 14px;
+  transition: border-color .2s, box-shadow .2s, background .2s;
+}
+
+.admin-form textarea,
+.form-panel textarea,
+.auth textarea {
+  min-height: 100px;
+  resize: vertical;
+}
+
+.admin-form input::placeholder,
+.form-panel input::placeholder,
+.auth input::placeholder {
+  color: #93a398;
+}
+
+.admin-form input:focus,
+.admin-form textarea:focus,
+.form-panel input:focus,
+.form-panel textarea:focus,
+.auth input:focus,
+.auth textarea:focus,
+.status-form select:focus {
+  outline: none;
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 4px rgba(34, 153, 85, .12);
+}
+
+.admin-form input[type="file"] {
+  padding: 8px;
+  color: var(--text-muted);
+  font-size: 12px;
+}
+
+.admin-form input[type="file"]::file-selector-button {
+  margin-right: 10px;
+  padding: 8px 12px;
+  border: 0;
+  border-radius: 8px;
+  background: #eaf7ee;
+  color: var(--primary-dark);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.admin-form-wide { grid-column: 1 / -1; }
+.admin-form-actions { display: flex; flex-wrap: wrap; gap: 12px; }
+.admin-form-actions .cta,
+.admin-form-actions .secondary-button { min-height: 46px; padding: 11px 20px; border-radius: 12px; }
+
+.top-search {
+  position: relative;
+  overflow: visible;
+}
+
+.search-input-wrap {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+}
+
+.top-search .search-input-wrap input {
+  width: 100%;
+  min-width: 0;
+}
+
+.search-suggestions {
+  position: absolute;
+  z-index: 120;
+  top: calc(100% + 10px);
+  left: 0;
+  display: grid;
+  width: max(100%, 300px);
+  max-height: 360px;
+  overflow-y: auto;
+  padding: 7px;
+  border: 1px solid #e1ebe3;
+  border-radius: 16px;
+  background: #fff;
+  box-shadow: 0 16px 40px rgba(18, 55, 33, .18);
+}
+
+.search-suggestions[hidden] { display: none; }
+.search-suggestion { display: flex; align-items: center; gap: 12px; padding: 10px 12px; border-radius: 11px; color: var(--text-dark); }
+.search-suggestion:hover,
+.search-suggestion[aria-selected="true"] { background: #eff8f1; }
+.search-suggestion-emoji { display: grid; place-items: center; flex: 0 0 38px; width: 38px; height: 38px; border-radius: 11px; background: #f2f8f3; font-size: 21px; }
+.search-suggestion-details { display: grid; gap: 2px; min-width: 0; }
+.search-suggestion-details strong { overflow: hidden; font-size: 13px; text-overflow: ellipsis; white-space: nowrap; }
+.search-suggestion-details small { color: var(--text-muted); font-size: 11px; }
+.search-suggestion-message { padding: 13px 12px; color: var(--text-muted); font-size: 12px; }
+
+@media (max-width: 768px) {
+  .admin-form { grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; }
+}
+
+@media (max-width: 520px) {
+  .admin-form { grid-template-columns: 1fr; }
+  .admin-form-wide { grid-column: auto; }
+  .admin-form-actions { display: grid; }
+  .search-suggestions { width: max(100%, 260px); }
+}
+
+.logo-image {
+  display: block;
+  flex: 0 0 66px;
+  width: 66px;
+  height: 66px;
+  border-radius: 50%;
+  object-fit: cover;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, .12));
+}
+
+.footer-logo .logo-image {
+  flex-basis: 58px;
+  width: 58px;
+  height: 58px;
+}
+
+.crest-logo {
+  width: 30px;
+  height: 30px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.form-panel select {
+  width: 100%;
+  min-height: 48px;
+  padding: 11px 14px;
+  border: 1px solid #d5e2d8;
+  border-radius: 12px;
+  background: #fff;
+  color: var(--text-dark);
+  font-size: 14px;
+}
+
+.form-panel select:focus {
+  outline: none;
+  border-color: var(--primary-light);
+  box-shadow: 0 0 0 4px rgba(34, 153, 85, .12);
+}
+
+.checkout-discount-row strong { color: var(--primary); }
+.checkout-total-row { padding-top: 12px; border-top: 1px solid var(--line); font-size: 17px; }
+.image-credits-page { padding-bottom: 48px; }
+.image-credits-page .page-head { margin: 35px 0 24px; }
+.image-credits-list { display: grid; gap: 12px; }
+.image-credit { display: grid; gap: 5px; padding: 16px 20px; font-size: 13px; }
+.image-credit > span { color: var(--text-muted); }
+.image-credit > a { color: var(--primary-dark); font-weight: 700; }
+
+@media (max-width: 520px) {
+  .logo-image { flex-basis: 56px; width: 56px; height: 56px; }
 }

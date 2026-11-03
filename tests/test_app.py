@@ -63,6 +63,7 @@ class ApplicationFlowTests(unittest.TestCase):
         self.assertIn(b'id="tuanhung-slider"', home.data)
         self.assertIn(b'id="slider-next"', home.data)
         self.assertIn(b'id="chat-form"', home.data)
+        self.assertIn(b'https://freshfruit-shop.vercel.app', home.data)
         javascript = self.client.get('/static/app.js')
         stylesheet = self.client.get('/static/style.css')
         self.assertEqual(javascript.status_code, 200)
@@ -70,12 +71,59 @@ class ApplicationFlowTests(unittest.TestCase):
         javascript.close()
         stylesheet.close()
         self.assertEqual(self.client.get('/products').status_code, 200)
+        self.assertEqual(self.client.get('/image-credits').status_code, 200)
         self.assertEqual(self.client.get('/cart').status_code, 302)
         self.assertEqual(self.client.post('/login').status_code, 400)
-        for image in ('fruit_shelf.jpg', 'store_display.jpg'):
+        for image in (
+            'fruit_shelf.jpg',
+            'store_display.jpg',
+            'tuanhung-fruit-logo.webp',
+            'fruit-lychee.jpg',
+            'fruit-longan.jpg',
+            'fruit-orange.jpg',
+            'fruit-grapefruit.jpg',
+            'fruit-plum.jpg',
+            'fruit-peach.jpg',
+            'fruit-strawberry.jpg',
+            'fruit-pear.png',
+            'fruit-persimmon.jpg',
+            'fruit-mandarin.jpg',
+        ):
             response = self.client.get(f'/static/images/{image}')
             self.assertEqual(response.status_code, 200)
             response.close()
+
+    def test_product_suggestions_match_single_character_case_insensitively(self):
+        response = self.client.get('/api/product-suggestions?q=L')
+
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(any('Thanh long' in item['name'] for item in response.json))
+        lowercase_response = self.client.get('/api/product-suggestions?q=l')
+        self.assertTrue(any('Thanh long' in item['name'] for item in lowercase_response.json))
+        self.assertLessEqual(len(response.json), 6)
+        self.assertEqual(self.client.get('/api/product-suggestions').json, [])
+
+    def test_seed_catalog_adds_northern_fruit_and_multiple_coupons(self):
+        names = [product[0] for product in app_module.NORTHERN_PRODUCTS]
+        placeholders = ','.join('?' for _ in names)
+        app_module.init_db()
+        with app_module.app.app_context():
+            northern_count = app_module.db().execute(
+                f'SELECT COUNT(*) FROM products WHERE name IN ({placeholders})',
+                names,
+            ).fetchone()[0]
+            coupon_codes = {
+                row['code']
+                for row in app_module.db().execute(
+                    'SELECT code FROM coupons WHERE active=1'
+                ).fetchall()
+            }
+
+        self.assertEqual(northern_count, 10)
+        self.assertTrue(
+            {'FRESH10', 'WELCOME5', 'FRUIT12', 'VUONMUA15', 'TUANHUNG20'}
+            <= coupon_codes
+        )
 
     def test_postgres_sql_adapter_preserves_application_query_features(self):
         self.assertEqual(
@@ -431,6 +479,29 @@ class ApplicationFlowTests(unittest.TestCase):
         self.assertEqual(order['total'], 80100)
         self.assertEqual(stock['stock'], 39)
         self.assertEqual(self.client.get('/orders').status_code, 200)
+
+        token = self.csrf_token('/product/1')
+        self.client.post('/product/1', data={'_csrf': token, 'quantity': '1'})
+        checkout_page = self.client.get('/checkout')
+        for code in ('WELCOME5', 'FRUIT12', 'VUONMUA15', 'TUANHUNG20'):
+            self.assertIn(code.encode(), checkout_page.data)
+        token = self.csrf_token('/checkout')
+        response = self.client.post(
+            '/checkout',
+            data={
+                '_csrf': token,
+                'recipient': 'Test Customer',
+                'phone': '0123456789',
+                'address': '123 Example Street',
+                'coupon': 'TUANHUNG20',
+            },
+        )
+        self.assertEqual(response.status_code, 302)
+        with app_module.app.app_context():
+            discounted_order = app_module.db().execute(
+                'SELECT total FROM orders ORDER BY id DESC LIMIT 1'
+            ).fetchone()
+        self.assertEqual(discounted_order['total'], 71200)
 
     def test_admin_creation_and_login(self):
         for name, password in (

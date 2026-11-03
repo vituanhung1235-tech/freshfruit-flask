@@ -32,16 +32,18 @@
 		<form method="post" action="{{url_for('admin_product')}}" class="admin-form" enctype="multipart/form-data" id="product-form">
 			<input type="hidden" name="_csrf" value="{{csrf_token()}}">
 			<input type="hidden" name="id" value="">
-			<label>Tên sản phẩm<input name="name" required></label>
-			<label>Danh mục<input name="category" required value="Việt Nam"></label>
-			<label>Giá VND<input name="price" type="number" min="0" required></label>
-			<label>Đơn vị<input name="unit" value="kg" required></label>
-			<label>Tồn kho<input name="stock" type="number" min="0" required></label>
-			<label>Emoji<input name="emoji" value="🍎"></label>
+			<label>Tên sản phẩm<input name="name" placeholder="Ví dụ: Táo Fuji Nhật Bản" required></label>
+			<label>Danh mục<input name="category" placeholder="Ví dụ: Nhập khẩu" required value="Việt Nam"></label>
+			<label>Giá (VND)<input name="price" type="number" min="0" placeholder="89000" required></label>
+			<label>Đơn vị<input name="unit" placeholder="kg" value="kg" required></label>
+			<label>Tồn kho<input name="stock" type="number" min="0" placeholder="0" required></label>
+			<label>Emoji<input name="emoji" value="🍎" maxlength="10"></label>
 			<label>Ảnh sản phẩm (JPG, PNG, WebP; tối đa 1 MB)<input type="file" name="image" accept="image/jpeg,image/png,image/webp"></label>
-			<label style="grid-column: span 2;">Mô tả<input name="description" value="Hoa quả tươi ngon"></label>
-			<button class="cta" id="product-submit">Thêm sản phẩm</button>
-			<button type="button" id="product-reset">Thêm sản phẩm mới</button>
+			<label class="admin-form-wide">Mô tả<textarea name="description" rows="3">Hoa quả tươi ngon</textarea></label>
+			<div class="admin-form-actions admin-form-wide">
+				<button class="cta" id="product-submit">Thêm sản phẩm</button>
+				<button type="button" class="secondary-button" id="product-reset">Làm mới biểu mẫu</button>
+			</div>
 		</form>
 		<div class="tablewrap">
 			<table>

@@ -26,7 +26,7 @@
           <!-- Center Content -->
           <div class="banner-center-content">
             <div class="brand-crest">
-              <span class="crest-icon">🍎</span>
+              <img class="crest-logo" src="{{url_for('static', filename='images/tuanhung-fruit-logo.webp')}}" alt="">
               <span class="crest-text">Tuấn Hùng Fruit</span>
               <span class="crest-slogan">good fruit, good life</span>
             </div>
@@ -44,9 +44,9 @@
             </div>
 
             <div class="banner-bottom-info">
-              <span>🌐 tuanhungfruit.vn</span>
+              <a href="https://freshfruit-shop.vercel.app">🌐 freshfruit-shop.vercel.app</a>
               <span class="dot-sep">•</span>
-              <span>📞 0862.552.155</span>
+              <span>📞 0365.107.387</span>
             </div>
           </div>
 
@@ -82,7 +82,7 @@
 
           <div class="banner-center-content">
             <div class="brand-crest">
-              <span class="crest-icon">🍎</span>
+              <img class="crest-logo" src="{{url_for('static', filename='images/tuanhung-fruit-logo.webp')}}" alt="">
               <span class="crest-text">Tuấn Hùng Fruit</span>
               <span class="crest-slogan">good fruit, good life</span>
             </div>
@@ -96,13 +96,13 @@
 
             <div class="banner-cta-row">
               <a href="{{url_for('products', category='Nhập khẩu')}}" class="banner-cta-btn">Mua Trái Cây Nhập Khẩu →</a>
-              <span class="banner-promo-badge">🌟 Giảm 10% mã FRESH10</span>
+              <span class="banner-promo-badge">🌟 Nhiều mã ưu đãi tại thanh toán</span>
             </div>
 
             <div class="banner-bottom-info">
-              <span>🌐 tuanhungfruit.vn</span>
+              <a href="https://freshfruit-shop.vercel.app">🌐 freshfruit-shop.vercel.app</a>
               <span class="dot-sep">•</span>
-              <span>📞 0862.552.155</span>
+              <span>📞 0365.107.387</span>
             </div>
           </div>
 
@@ -137,7 +137,7 @@
 
           <div class="banner-center-content">
             <div class="brand-crest">
-              <span class="crest-icon">🍎</span>
+              <img class="crest-logo" src="{{url_for('static', filename='images/tuanhung-fruit-logo.webp')}}" alt="">
               <span class="crest-text">Tuấn Hùng Fruit</span>
               <span class="crest-slogan">good fruit, good life</span>
             </div>
@@ -155,9 +155,9 @@
             </div>
 
             <div class="banner-bottom-info">
-              <span>🌐 tuanhungfruit.vn</span>
+              <a href="https://freshfruit-shop.vercel.app">🌐 freshfruit-shop.vercel.app</a>
               <span class="dot-sep">•</span>
-              <span>📞 0862.552.155</span>
+              <span>📞 0365.107.387</span>
             </div>
           </div>
 
@@ -208,7 +208,7 @@
     <div class="benefit-icon-circle">🎁</div>
     <div class="benefit-text">
       <strong>KHUYẾN MÃI NGẬP TRÀN</strong>
-      <small>Nhập mã FRESH10 giảm ngay 10%</small>
+      <small>Chọn mã giảm giá phù hợp tại bước thanh toán</small>
     </div>
   </div>
   <div class="benefit-card">
@@ -252,11 +252,13 @@
   <div class="promo-banner-inner">
     <div class="promo-content">
       <span class="promo-tag">ƯU ĐÃI ĐỘC QUYỀN</span>
-      <h2>Giảm 10% Cho Đơn Hàng Đầu Tiên</h2>
-      <p>Nhập ngay mã ưu đãi <strong>FRESH10</strong> tại bước thanh toán để nhận chiết khấu 10% từ <strong>Tuấn Hùng Fruit</strong>.</p>
+      <h2>Ưu đãi dành cho bạn</h2>
+      <p>Chọn một trong các mã đang áp dụng tại bước thanh toán để nhận ưu đãi từ <strong>Tuấn Hùng Fruit</strong>.</p>
       <div class="promo-actions">
         <a href="{{url_for('products')}}" class="promo-btn">Mua sắm ngay</a>
-        <span class="promo-code-badge">Mã: <strong>FRESH10</strong></span>
+        {% for coupon in available_coupons %}
+          <span class="promo-code-badge">Mã: <strong>{{coupon.code}}</strong> · {{coupon.discount_percent}}%</span>
+        {% endfor %}
       </div>
     </div>
     <div class="promo-image-box">
