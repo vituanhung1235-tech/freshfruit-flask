@@ -1,4 +1,4 @@
-import base64, io, os, sqlite3, json, re, secrets
+import base64, io, os, sqlite3, json, re, secrets, unicodedata
 from datetime import datetime
 from functools import wraps
 from pathlib import Path
@@ -622,11 +622,24 @@ def register():
             flash('Kiểm tra họ tên, email, mật khẩu (ít nhất 8 ký tự) và xác nhận.', 'danger')
         else:
             try:
+                pending_order = session.get('pending_chat_order')
                 end_staff_access_session()
                 cursor = db().execute('INSERT INTO users(name, email, password_hash) VALUES(?,?,?)', (name, email, generate_password_hash(password)))
                 db().commit()
                 session.clear()
                 session.update(user_id=cursor.lastrowid, email=email, name=name, role='customer', csrf=os.urandom(24).hex())
+                if pending_order:
+                    try:
+                        add_chat_order_to_cart(
+                            cursor.lastrowid,
+                            int(pending_order['product_id']),
+                            int(pending_order['quantity']),
+                        )
+                    except (KeyError, TypeError, ValueError):
+                        flash('Không thể thêm đơn hàng đã chọn. Vui lòng thử lại trong giỏ hàng.', 'warning')
+                        return redirect(url_for('products'))
+                    flash('Đã thêm sản phẩm bạn chọn vào giỏ hàng.', 'success')
+                    return redirect(url_for('checkout'))
                 flash('Đăng ký thành công!', 'success')
                 return redirect(url_for('home'))
             except DB_INTEGRITY_ERROR_TYPES:
@@ -641,9 +654,25 @@ def login():
         password = request.form.get('password', '')
         user = db().execute('SELECT * FROM users WHERE email=?', (email,)).fetchone()
         if user and check_password_hash(user['password_hash'], password):
+            pending_order = session.get('pending_chat_order')
+            checkout_next = request.form.get('next') == 'checkout'
             end_staff_access_session()
             session.clear()
             session.update(user_id=user['id'], email=user['email'], name=user['name'], role=user['role'], csrf=os.urandom(24).hex())
+            if pending_order:
+                try:
+                    add_chat_order_to_cart(
+                        user['id'],
+                        int(pending_order['product_id']),
+                        int(pending_order['quantity']),
+                    )
+                except (KeyError, TypeError, ValueError):
+                    flash('Không thể thêm đơn hàng đã chọn. Vui lòng thử lại trong giỏ hàng.', 'warning')
+                    return redirect(url_for('products'))
+                flash('Đã thêm sản phẩm bạn chọn vào giỏ hàng.', 'success')
+                return redirect(url_for('checkout'))
+            if checkout_next:
+                return redirect(url_for('checkout'))
             destination = {
                 'admin': 'admin',
                 'manager': 'admin',
@@ -652,7 +681,11 @@ def login():
             }.get(user['role'], 'home')
             return redirect(url_for(destination))
         flash('Email hoặc mật khẩu không chính xác.', 'danger')
-    return render_template('auth.html', mode='login')
+    return render_template(
+        'auth.html',
+        mode='login',
+        next_page='checkout' if request.args.get('next') == 'checkout' else '',
+    )
 
 @app.post('/logout')
 def logout():
@@ -1334,6 +1367,108 @@ def get_smart_bot_reply(question: str, catalog: list) -> str:
         "Hãy nhắn cho mình loại trái cây bạn đang cần tìm nhé!"
     )
 
+def normalize_order_text(value):
+    normalized = unicodedata.normalize('NFD', value.lower())
+    normalized = ''.join(
+        character
+        for character in normalized
+        if unicodedata.category(character) != 'Mn'
+    )
+    return normalized.replace('đ', 'd')
+
+
+def identify_chat_order(question, catalog):
+    normalized_question = normalize_order_text(question)
+    if not re.search(r'\b(dat|mua|lay|order|them vao gio)\b', normalized_question):
+        return None
+
+    quantity_match = re.search(
+        r'(?<!\w)(\d+(?:[.,]\d+)?)\s*'
+        r'(kg|kilogram|kilogam|ky|hop|qua|trai|nai|gio)?\b',
+        normalized_question,
+    )
+    if not quantity_match:
+        return None
+    try:
+        numeric_quantity = float(quantity_match.group(1).replace(',', '.'))
+    except ValueError:
+        return None
+    if not numeric_quantity.is_integer() or not 1 <= numeric_quantity <= 999:
+        return None
+
+    requested_unit = {
+        'kilogram': 'kg',
+        'kilogam': 'kg',
+        'ky': 'kg',
+        'hop': 'hộp',
+        'qua': 'quả',
+        'trai': 'quả',
+        'nai': 'nải',
+        'gio': 'giỏ',
+    }.get(quantity_match.group(2), quantity_match.group(2))
+
+    matches = []
+    for product in catalog:
+        tokens = normalize_order_text(product['name']).split()
+        phrases = [' '.join(tokens[:length]) for length in range(1, len(tokens) + 1)]
+        matched_phrases = [
+            phrase for phrase in phrases
+            if phrase and phrase in normalized_question
+        ]
+        if matched_phrases:
+            best_phrase = max(matched_phrases, key=lambda phrase: (len(phrase.split()), len(phrase)))
+            matches.append((len(best_phrase.split()), len(best_phrase), product))
+
+    if not matches:
+        return None
+    best_score = max((word_count, character_count) for word_count, character_count, _ in matches)
+    best_products = [
+        product for word_count, character_count, product in matches
+        if (word_count, character_count) == best_score
+    ]
+    if len(best_products) != 1:
+        return None
+
+    product = best_products[0]
+    if requested_unit and normalize_order_text(product['unit']) != normalize_order_text(requested_unit):
+        return None
+    return product, int(numeric_quantity)
+
+
+def add_chat_order_to_cart(user_id, product_id, quantity):
+    conn = db()
+    try:
+        if not DATABASE_URL:
+            conn.execute('BEGIN IMMEDIATE')
+        lock_clause = ' FOR UPDATE' if DATABASE_URL else ''
+        product = conn.execute(
+            'SELECT id,stock FROM products WHERE id=? AND active=1' + lock_clause,
+            (product_id,),
+        ).fetchone()
+        if not product:
+            raise ValueError('Sản phẩm không còn bán.')
+        existing = conn.execute(
+            'SELECT quantity FROM cart_items WHERE user_id=? AND product_id=?',
+            (user_id, product_id),
+        ).fetchone()
+        total_quantity = quantity + (existing['quantity'] if existing else 0)
+        if total_quantity > product['stock']:
+            raise ValueError(
+                f'Chỉ còn {product["stock"]} sản phẩm trong kho, '
+                'số lượng trong giỏ vượt tồn kho.'
+            )
+        conn.execute(
+            'INSERT INTO cart_items(user_id,product_id,quantity) VALUES(?,?,?) '
+            'ON CONFLICT(user_id,product_id) DO UPDATE '
+            'SET quantity=cart_items.quantity+excluded.quantity',
+            (user_id, product_id, quantity),
+        )
+        conn.commit()
+    except (ValueError, *DB_ERROR_TYPES):
+        conn.rollback()
+        raise
+
+
 @app.post('/api/chat')
 def chat():
     data = request.get_json(silent=True) or {}
@@ -1344,8 +1479,30 @@ def chat():
     if not isinstance(history, list):
         history = []
         
-    catalog = db().execute('SELECT name, price, unit, stock FROM products WHERE active=1 ORDER BY id LIMIT 40').fetchall()
+    catalog = db().execute(
+        'SELECT id,name,price,unit,stock FROM products WHERE active=1 ORDER BY id LIMIT 40'
+    ).fetchall()
     products_info = '\n'.join(f"- {p['name']}: {p['price']:,} VND/{p['unit']}, còn {p['stock']}" for p in catalog)
+    order_intent = identify_chat_order(question, catalog)
+    order_action = None
+    order_note = ''
+    if order_intent:
+        product, quantity = order_intent
+        if product['stock'] >= quantity:
+            order_action = {
+                'product_id': product['id'],
+                'name': product['name'],
+                'quantity': quantity,
+                'unit': product['unit'],
+                'price': product['price'],
+            }
+        else:
+            order_note = (
+                f"Hiện chỉ còn {product['stock']} {product['unit']} "
+                f"{product['name']} trong kho."
+            )
+    else:
+        order_note = ''
     
     key = os.getenv('OPENAI_API_KEY', '').strip()
     openai_error = None
@@ -1367,7 +1524,10 @@ def chat():
             system_prompt = (
                 "Bạn là Tuấn Hùng AI, trợ lý ảo thông minh của cửa hàng hoa quả Tuấn Hùng Fruit tại Việt Nam. "
                 "Hãy trả lời bằng tiếng Việt tự nhiên, thân thiện, súc tích và không dùng emoji. "
-                "Tư vấn hoa quả, dinh dưỡng, cách bảo quản và hướng dẫn đặt mua. "
+                "Có thể trả lời các câu hỏi kiến thức tổng quát ngoài chủ đề bán hàng. "
+                "Với thông tin cần cập nhật trực tiếp hoặc không chắc chắn, hãy nói rõ giới hạn thay vì đoán. "
+                "Không hướng dẫn nội dung gây nguy hiểm, không thay thế chuyên gia y tế, pháp lý hoặc tài chính. "
+                "Khi tư vấn về cửa hàng, chỉ dùng thông tin sản phẩm và chính sách được cung cấp dưới đây. "
                 "Thông tin sản phẩm đang có tại cửa hàng:\n"
                 + products_info
                 + "\nChính sách cửa hàng: Đặt hàng trực tiếp trên website, thanh toán khi nhận hàng (COD), "
@@ -1383,13 +1543,23 @@ def chat():
             )
             reply = completion.choices[0].message.content.strip()
             if reply:
-                return jsonify(reply=reply, mode='ai')
+                if order_note:
+                    reply = f'{reply}\n\n{order_note}'
+                return jsonify(reply=reply, mode='ai', order_action=order_action)
         except Exception as exc:
             openai_error = str(exc)
             app.logger.warning(f"OpenAI API call failed, falling back to smart bot: {exc}")
 
     # Fallback to intelligent rule-based & catalog-aware bot
-    smart_reply = get_smart_bot_reply(question, catalog)
+    if order_action:
+        product, quantity = order_intent
+        smart_reply = (
+            f"Mình đã tìm thấy **{product['name']}**. "
+            f"Bạn chọn {quantity} {product['unit']}; nhấn nút bên dưới để thêm vào giỏ "
+            "và chuyển đến thanh toán."
+        )
+    else:
+        smart_reply = get_smart_bot_reply(question, catalog)
     
     note = ""
     if openai_error and ('insufficient_quota' in openai_error or '429' in openai_error or 'credit_balance_exhausted' in openai_error):
@@ -1397,7 +1567,49 @@ def chat():
     elif openai_error and ('401' in openai_error or 'Incorrect API key' in openai_error):
         note = "\n\n*(Ghi chú: OPENAI_API_KEY chưa chính xác. Trợ lý thông minh Tuấn Hùng AI đang trả lời tự động.)*"
 
-    return jsonify(reply=smart_reply + note, mode='smart_bot')
+    return jsonify(
+        reply=smart_reply + note + (f'\n\n{order_note}' if order_note else ''),
+        mode='smart_bot',
+        order_action=order_action,
+    )
+
+
+@app.post('/api/chat/order')
+def chat_order():
+    data = request.get_json(silent=True) or {}
+    raw_product_id = data.get('product_id')
+    raw_quantity = data.get('quantity')
+    if (
+        isinstance(raw_product_id, bool)
+        or isinstance(raw_quantity, bool)
+        or not re.fullmatch(r'\d+', str(raw_product_id or ''))
+        or not re.fullmatch(r'\d+', str(raw_quantity or ''))
+    ):
+        return jsonify(error='Sản phẩm hoặc số lượng không hợp lệ.'), 400
+    product_id = int(raw_product_id)
+    quantity = int(raw_quantity)
+    if product_id < 1 or not 1 <= quantity <= 999:
+        return jsonify(error='Sản phẩm hoặc số lượng không hợp lệ.'), 400
+
+    if not session.get('user_id'):
+        session['pending_chat_order'] = {
+            'product_id': product_id,
+            'quantity': quantity,
+        }
+        return jsonify(
+            requires_login=True,
+            login_url=url_for('login', next='checkout'),
+        ), 401
+
+    try:
+        add_chat_order_to_cart(session['user_id'], product_id, quantity)
+    except ValueError as error:
+        return jsonify(error=str(error)), 409
+    except DB_ERROR_TYPES:
+        db().rollback()
+        app.logger.exception('Could not add chatbot order to the shopping cart.')
+        return jsonify(error='Không thể cập nhật giỏ hàng. Vui lòng thử lại.'), 500
+    return jsonify(redirect=url_for('checkout'))
 
 @app.get('/health')
 def health():

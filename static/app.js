@@ -320,6 +320,51 @@ function addMessage(content, type) {
   return div;
 }
 
+function addOrderAction(message, action) {
+  if (!message || !action) return;
+  const form = document.createElement('div');
+  form.className = 'chat-order-action';
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.textContent = `Đặt hàng ngay · ${action.name} · ${action.quantity} ${action.unit}`;
+  button.addEventListener('click', async () => {
+    button.disabled = true;
+    button.textContent = 'Đang chuẩn bị thanh toán...';
+    try {
+      const csrfMeta = document.querySelector('meta[name="csrf-token"]');
+      const response = await fetch('/api/chat/order', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-CSRF-Token': csrfMeta ? csrfMeta.content : ''
+        },
+        body: JSON.stringify({
+          product_id: action.product_id,
+          quantity: action.quantity
+        })
+      });
+      const data = await response.json();
+      if (response.status === 401 && data.login_url) {
+        window.location.assign(data.login_url);
+        return;
+      }
+      if (!response.ok) {
+        button.textContent = data.error || 'Không thể thêm sản phẩm vào giỏ.';
+        return;
+      }
+      window.location.assign(data.redirect);
+    } catch (error) {
+      button.textContent = 'Không kết nối được. Vui lòng thử lại.';
+    } finally {
+      if (button.isConnected && !button.textContent.includes('Đang chuẩn bị')) {
+        button.disabled = false;
+      }
+    }
+  });
+  form.appendChild(button);
+  message.appendChild(form);
+}
+
 async function handleSendMessage(message) {
   if (!message || !form) return;
   addMessage(message, 'user');
@@ -340,7 +385,10 @@ async function handleSendMessage(message) {
     });
     const data = await res.json();
     const replyText = data.reply || data.error || 'Có lỗi xảy ra.';
-    if (pending) pending.innerHTML = formatMarkdown(replyText);
+    if (pending) {
+      pending.innerHTML = formatMarkdown(replyText);
+      addOrderAction(pending, data.order_action);
+    }
     if (res.ok) {
       history.push({ role: 'user', content: message }, { role: 'assistant', content: replyText });
       history = history.slice(-8);

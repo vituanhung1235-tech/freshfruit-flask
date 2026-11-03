@@ -191,6 +191,121 @@ class ApplicationFlowTests(unittest.TestCase):
             )
         self.assertEqual(response.status_code, 400)
 
+    def test_chatbot_handles_general_questions_with_ai(self):
+        token = self.csrf_token('/')
+        completion = unittest.mock.MagicMock()
+        completion.choices[0].message.content = 'Paris là thủ đô của nước Pháp.'
+        with patch.dict(os.environ, {'OPENAI_API_KEY': 'test-key'}), patch(
+            'openai.OpenAI'
+        ) as openai_client:
+            openai_client.return_value.chat.completions.create.return_value = completion
+            response = self.client.post(
+                '/api/chat',
+                json={'message': 'Thủ đô nước Pháp là gì?', 'history': []},
+                headers={'X-CSRF-Token': token},
+            )
+
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.json['mode'], 'ai')
+        self.assertIn('Paris', response.json['reply'])
+        system_prompt = openai_client.return_value.chat.completions.create.call_args.kwargs[
+            'messages'
+        ][0]['content']
+        self.assertIn('câu hỏi kiến thức tổng quát ngoài chủ đề bán hàng', system_prompt)
+
+    def test_chatbot_creates_order_action_and_adds_requested_quantity(self):
+        admin_id = self.create_admin()
+        with self.client.session_transaction() as session:
+            session.update(user_id=admin_id, email='admin@example.com')
+
+        token = self.csrf_token('/')
+        with patch.dict(os.environ, {'OPENAI_API_KEY': ''}):
+            response = self.client.post(
+                '/api/chat',
+                json={'message': 'đặt thanh long 2kg', 'history': []},
+                headers={'X-CSRF-Token': token},
+            )
+        self.assertEqual(response.status_code, 200)
+        action = response.json['order_action']
+        self.assertEqual(action['name'], 'Thanh long ruột đỏ')
+        self.assertEqual(action['quantity'], 2)
+        self.assertEqual(action['unit'], 'kg')
+
+        token = self.csrf_token('/')
+        order_response = self.client.post(
+            '/api/chat/order',
+            json={
+                'product_id': action['product_id'],
+                'quantity': action['quantity'],
+            },
+            headers={'X-CSRF-Token': token},
+        )
+        self.assertEqual(order_response.status_code, 200)
+        self.assertEqual(order_response.json['redirect'], '/checkout')
+        self.assertEqual(self.client.get('/checkout').status_code, 200)
+        with app_module.app.app_context():
+            cart_item = app_module.db().execute(
+                'SELECT quantity FROM cart_items WHERE user_id=? AND product_id=?',
+                (admin_id, action['product_id']),
+            ).fetchone()
+        self.assertEqual(cart_item['quantity'], 2)
+
+        with app_module.app.app_context():
+            app_module.db().execute(
+                'UPDATE products SET stock=1 WHERE id=?', (action['product_id'],)
+            )
+            app_module.db().commit()
+        token = self.csrf_token('/')
+        with patch.dict(os.environ, {'OPENAI_API_KEY': ''}):
+            unavailable = self.client.post(
+                '/api/chat',
+                json={'message': 'đặt thanh long 2kg', 'history': []},
+                headers={'X-CSRF-Token': token},
+            )
+        self.assertIsNone(unavailable.json['order_action'])
+        self.assertIn('chỉ còn 1 kg', unavailable.json['reply'])
+
+    def test_chat_order_survives_login_and_redirects_to_checkout(self):
+        with app_module.app.app_context():
+            customer_id = app_module.db().execute(
+                'INSERT INTO users(name,email,password_hash) VALUES(?,?,?)',
+                ('Chat Customer', 'chat-customer@example.com', generate_password_hash('chat-password')),
+            ).lastrowid
+            product_id = app_module.db().execute(
+                "SELECT id FROM products WHERE name='Thanh long ruột đỏ'"
+            ).fetchone()['id']
+            app_module.db().commit()
+
+        token = self.csrf_token('/')
+        order_response = self.client.post(
+            '/api/chat/order',
+            json={'product_id': product_id, 'quantity': 2},
+            headers={'X-CSRF-Token': token},
+        )
+        self.assertEqual(order_response.status_code, 401)
+        self.assertTrue(order_response.json['requires_login'])
+        self.assertEqual(order_response.json['login_url'], '/login?next=checkout')
+
+        token = self.csrf_token('/login?next=checkout')
+        login_response = self.client.post(
+            '/login?next=checkout',
+            data={
+                '_csrf': token,
+                'next': 'checkout',
+                'email': 'chat-customer@example.com',
+                'password': 'chat-password',
+            },
+        )
+        self.assertEqual(login_response.status_code, 302)
+        self.assertEqual(login_response.headers['Location'], '/checkout')
+        self.assertEqual(self.client.get('/checkout').status_code, 200)
+        with app_module.app.app_context():
+            cart_item = app_module.db().execute(
+                'SELECT quantity FROM cart_items WHERE user_id=? AND product_id=?',
+                (customer_id, product_id),
+            ).fetchone()
+        self.assertEqual(cart_item['quantity'], 2)
+
     def test_stale_session_cannot_add_product_to_cart(self):
         self.client.get('/product/12')
         with self.client.session_transaction() as session:
