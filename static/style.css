@@ -336,6 +336,21 @@ button {
   width: 100%;
 }
 
+.user-menu-pop .menu-icon,
+.ops-links .menu-icon {
+  display: inline-block;
+  width: 24px;
+  margin-right: 7px;
+  text-align: center;
+  font-size: 16px;
+  vertical-align: -1px;
+}
+
+.staff-role-grid .role-icon {
+  font-size: 20px;
+  vertical-align: -1px;
+}
+
 .user-menu-pop a:hover, .user-menu-pop button:hover {
   background: #f2f7f3;
   color: var(--primary);

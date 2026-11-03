@@ -15,9 +15,9 @@
 		<div><small>Doanh thu bán tại quầy</small><h2>{{money(stats.pos_revenue)}}</h2><small>{{stats.pos_sales}} phiếu bán</small></div>
 	</div>
 	<nav class="ops-links" aria-label="Công việc vận hành">
-		<a href="{{url_for('point_of_sale')}}">Bán tại quầy</a>
-		<a href="{{url_for('packing_queue')}}">Hàng đợi đóng gói</a>
-		{% if user_role == 'admin' %}<a href="{{url_for('staff_management')}}">Nhân sự & phân quyền</a>{% endif %}
+		<a href="{{url_for('point_of_sale')}}"><span class="menu-icon" aria-hidden="true">🧾</span>Bán tại quầy</a>
+		<a href="{{url_for('packing_queue')}}"><span class="menu-icon" aria-hidden="true">📦</span>Hàng đợi đóng gói</a>
+		{% if user_role == 'admin' %}<a href="{{url_for('staff_management')}}"><span class="menu-icon" aria-hidden="true">👥</span>Nhân sự & phân quyền</a>{% endif %}
 	</nav>
 	<section class="panel admin-section">
 		<div class="section-heading"><div><span class="eyebrow">KÊNH OFFLINE</span><h2>Phiếu bán tại quầy gần đây</h2></div><a href="{{url_for('point_of_sale')}}">Mở quầy bán →</a></div>
