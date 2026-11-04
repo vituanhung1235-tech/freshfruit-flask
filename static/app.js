@@ -383,8 +383,29 @@ async function handleSendMessage(message) {
       },
       body: JSON.stringify({ message, history })
     });
-    const data = await res.json();
+    let data;
+    try {
+      data = await res.json();
+    } catch (error) {
+      throw new Error(`Máy chủ phản hồi không hợp lệ (HTTP ${res.status}).`);
+    }
+
+    if (!data || typeof data !== 'object' || Array.isArray(data)) {
+      throw new Error('Máy chủ không trả về dữ liệu chatbot hợp lệ.');
+    }
+
+    if (!res.ok && !data.reply) {
+      const errorText = typeof data.error === 'string'
+        ? data.error
+        : `Không thể gửi câu hỏi (HTTP ${res.status}).`;
+      if (pending) pending.innerHTML = formatMarkdown(errorText);
+      return;
+    }
+
     const replyText = data.reply || data.error || 'Có lỗi xảy ra.';
+    if (typeof replyText !== 'string') {
+      throw new Error('Máy chủ không trả về nội dung trả lời hợp lệ.');
+    }
     if (pending) {
       pending.innerHTML = formatMarkdown(replyText);
       addOrderAction(pending, data.order_action);
@@ -393,8 +414,11 @@ async function handleSendMessage(message) {
       history.push({ role: 'user', content: message }, { role: 'assistant', content: replyText });
       history = history.slice(-8);
     }
-  } catch (e) {
-    if (pending) pending.innerHTML = 'Không kết nối được trợ lý. Vui lòng thử lại sau.';
+  } catch (error) {
+    const errorText = error instanceof TypeError
+      ? 'Không kết nối được máy chủ chatbot. Hãy kiểm tra mạng và thử lại.'
+      : (error.message || 'Chatbot gặp lỗi. Vui lòng thử lại sau.');
+    if (pending) pending.innerHTML = formatMarkdown(errorText);
   } finally {
     if (sendBtn) sendBtn.disabled = false;
     if (messages) messages.scrollTop = messages.scrollHeight;
